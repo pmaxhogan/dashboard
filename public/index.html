@@ -11,77 +11,110 @@
     </style>
 </head>
 <body>
-<div id="chart">
+<div id="charts">
 </div>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     (async () => {
-        const source = "test";
+        const sources = (await fetch("http://localhost:3000/api/sources").then(response => response.json())).sources;
 
-        const titleCase = (str) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+        const updateFns = [];
 
-        const {stats, series} = await fetch(`http://localhost:3000/api/stats/${source}`).then(response => response.json());
+        const charts = document.querySelector("#charts");
+        const proms = sources.map(async source => {
+            const chartElem = document.createElement("div");
+            chartElem.id = `chart-${source}`;
+            charts.appendChild(chartElem);
 
-        const options = {
-            series: series.map(s => ({name: titleCase(s), data: stats.map(stat => [stat.timestamp, stat.stats[s]])})),
-            chart: {
-                type: "area",
-                stacked: false,
-                height: 350,
-                zoom: {
-                    type: "x",
-                    enabled: true,
-                    autoScaleYaxis: true
-                },
-                toolbar: {
-                    autoSelected: "zoom"
-                }
-            },
-            dataLabels: {
-                enabled: false
-            },
-            markers: {
-                size: 3,
-            },
-            title: {
-                text: `${titleCase(source)} Source`,
-                align: "left"
-            },
-            fill: {
-                type: "gradient",
-                gradient: {
-                    shadeIntensity: 1,
-                    inverseColors: false,
-                    opacityFrom: 0.9,
-                    opacityTo: 0,
-                    stops: [0, 90, 100],
-                },
-            },
-            yaxis: {
-                labels: {
-                    formatter: function (val) {
-                        return val.toFixed(0);
+            const titleCase = (str) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+
+            const options = {
+                series: [],
+                chart: {
+                    type: "area",
+                    stacked: false,
+                    height: 350,
+                    zoom: {
+                        type: "x",
+                        enabled: true,
+                        autoScaleYaxis: true
                     },
+                    toolbar: {
+                        autoSelected: "zoom"
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                markers: {
+                    size: 3,
                 },
                 title: {
-                    text: "Price"
+                    text: `${titleCase(source)} Source`,
+                    align: "left"
                 },
-            },
-            xaxis: {
-                type: "datetime",
-            },
-            tooltip: {
-                shared: false,
-                y: {
-                    formatter: function (val) {
-                        return val.toFixed(0)
+                stroke: {
+                    curve: "straight"
+                },
+                fill: {
+                    type: "gradient",
+                    gradient: {
+                        shadeIntensity: 1,
+                        inverseColors: false,
+                        opacityFrom: 0.9,
+                        opacityTo: 0,
+                        stops: [0, 90, 100],
+                    },
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function (val) {
+                            return val.toFixed(0);
+                        },
+                    },
+                    title: {
+                        text: "Price"
+                    },
+                },
+                xaxis: {
+                    type: "datetime",
+                },
+                tooltip: {
+                    shared: false,
+                    y: {
+                        formatter: function (val) {
+                            return val.toFixed(0)
+                        }
                     }
                 }
-            }
-        };
+            };
 
-        const chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
+            const chart = new ApexCharts(chartElem, options);
+            chart.render();
+
+            async function update(){
+                const {
+                    stats,
+                    series
+                } = await fetch(`http://localhost:3000/api/stats/${source}`).then(response => response.json());
+
+                const seriesData = series.map(s => ({
+                    name: titleCase(s),
+                    data: stats.map(stat => [stat.timestamp, stat.stats[s]])
+                }));
+
+                chart.updateSeries(seriesData);
+            }
+
+            updateFns.push(update);
+            update();
+        });
+
+        await Promise.all(proms);
+
+        setInterval(() => {
+            updateFns.forEach(fn => fn());
+        }, 5000);
     })();
 </script>
 </body>
