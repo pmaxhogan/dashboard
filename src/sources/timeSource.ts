@@ -6,7 +6,7 @@ type TestStats = {
     seconds: number;
 }
 
-export default new StatSource(1000, "test", async () => {
+export default new StatSource(1000, "time", async () => {
     const stats:TestStats = {
         hours: (new Date()).getHours(),
         minutes: (new Date()).getMinutes(),

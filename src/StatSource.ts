@@ -8,7 +8,7 @@ const deleteAll = async (colName:string) => {
 };
 
 
-export type source = "twitter" | "test";
+export type source = "twitter" | "time";
 
 type RefreshFunction = () => Promise<RefreshData>;
 

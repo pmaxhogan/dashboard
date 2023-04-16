@@ -1,5 +1,5 @@
 // import twitter from "./sources/twitter";
-import testSource from "./sources/testSource";
+import testSource from "./sources/timeSource";
 
 import express from "express";
 import db from "./db";
@@ -8,7 +8,7 @@ import {source} from "./StatSource";
 
 const app = express();
 
-const sources = ["twitter", "test"] as source[];
+const sources:source[] = ["twitter", "time"];
 
 app.use(cors());
 
@@ -23,7 +23,7 @@ app.get("/api/stats/:source", async (req, res) => {
     const results = await db.collection(source).find({}).toArray();
     res.send({
         stats: results.map((result) => ({stats: result.stats.stats, timestamp: result.timestamp})),
-        series: Object.keys(results[0].stats.stats)
+        series: results.length ? Object.keys(results[0].stats.stats) : []
     });
     // {"timestamp": {$gt: new Date(new Date().setHours(22, 15, 13))}}
 });
