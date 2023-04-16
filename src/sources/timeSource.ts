@@ -16,4 +16,8 @@ export default new StatSource(1000, "time", async () => {
     return {
         stats
     };
+}, async (req, res) => {
+    res.send("Hello world");
+}, async (req, res) => {
+    res.send("Hello world");
 });

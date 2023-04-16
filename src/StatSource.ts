@@ -1,7 +1,7 @@
 import db from "./db";
 
 // @ts-ignore
-const deleteAll = async (colName:string) => {
+const deleteAll = async (colName: string) => {
     const collection = db.collection(colName);
     const result = await collection.deleteMany({});
     console.log(`Deleted ${result.deletedCount} documents`);
@@ -28,10 +28,14 @@ export class StatSource {
      * @param source
      * @param refresh
      */
-    constructor(public refreshFrequency: number, public source: source, public refresh: RefreshFunction) {
+    constructor(public refreshFrequency: number, public source: source, public refresh: RefreshFunction,
+                public loginFunction: (req: any, res: any) => Promise<any>,
+                public callbackFunction: (req: any, res: any) => Promise<any>,
+    ) {
         this.refreshFrequency = refreshFrequency;
         this.source = source;
-
+        this.refresh = refresh;
+        this.loginFunction = loginFunction;
         // deleteAll(this.source);
     }
 

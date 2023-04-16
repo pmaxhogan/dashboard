@@ -1,4 +1,4 @@
-// import twitter from "./sources/twitter";
+import twitter from "./sources/twitter";
 import testSource from "./sources/timeSource";
 
 import express from "express";
@@ -27,10 +27,19 @@ app.get("/api/stats/:source", async (req, res) => {
     });
     // {"timestamp": {$gt: new Date(new Date().setHours(22, 15, 13))}}
 });
+
+app.get("/login/twitter", async (req, res) => {
+    await twitter.loginFunction(req, res);
+});
+
+app.get("/callback/twitter", async (req, res) => {
+    await twitter.callbackFunction(req, res);
+});
+
 app.listen(3000);
 
 const statSources = [
-    // twitter,
+    twitter,
     testSource
 ];
 
