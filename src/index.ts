@@ -1,3 +1,6 @@
+import {config} from "dotenv";
+config();
+
 import twitter from "./sources/twitter";
 import testSource from "./sources/timeSource";
 

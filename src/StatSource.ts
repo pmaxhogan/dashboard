@@ -43,18 +43,22 @@ export class StatSource {
      * Refresh the stats and save them to the database
      */
     public async refreshStats(): Promise<void> {
-        const stats = await this.refresh();
+        try {
+            const stats = await this.refresh();
 
-        const myColl = db.collection(this.source);
-        const result = await myColl.insertOne({
-            timestamp: new Date(),
-            metadata: {
-                source: this.source
-            },
-            stats
-        });
-        console.log(
-            `A document was inserted with the _id: ${result.insertedId}`,
-        );
+            const myColl = db.collection(this.source);
+            const result = await myColl.insertOne({
+                timestamp: new Date(),
+                metadata: {
+                    source: this.source
+                },
+                stats
+            });
+            console.log(
+                `A document was inserted with the _id: ${result.insertedId}`,
+            );
+        } catch (e) {
+            console.error(`Error ${e} for source ${this.source}`);
+        }
     }
 }

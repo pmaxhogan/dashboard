@@ -1,23 +1,25 @@
-import {StatSource} from "../StatSource";
 import {config} from "dotenv";
+config();
+
+import {StatSource} from "../StatSource";
 import {TwitterApi} from "twitter-api-v2";
 import {oauth} from "../db";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
-
-config();
-
 
 type TwitterStats = {
     followers: number;
 }
 
-
 const loginClient = new TwitterApi({
-    appKey: process.env.TWITTER_API_KEY as string,
-    appSecret: process.env.TWITTER_API_SECRET as string
+    // appKey: process.env.TWITTER_API_KEY as string,
+    // appSecret: process.env.TWITTER_API_SECRET as string,
+    clientId: process.env.TWITTER_CLIENT_ID as string,
+    clientSecret: process.env.TWITTER_CLIENT_SECRET as string
 });
 
 const twitterOauthDb = oauth.collection("twitter");
+
+const callbackUri = `${process.env.API_BASE}/callback/twitter`;
 
 /**
  * Login verifier
@@ -44,7 +46,7 @@ async function setLoginVerifierForState(state: string, verifier: string) {
  */
 async function getLoginCredentials() {
     const doc = await twitterOauthDb.findOne({credentials: true});
-    if (!doc) {
+    if (!doc || !doc.accessToken || !doc.refreshToken) {
         throw new Error("No credentials found!");
     }
     return doc;
@@ -60,15 +62,15 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
     await twitterOauthDb.insertOne({accessToken, refreshToken, credentials: true});
 }
 
-export default new StatSource(1000 * 60 * 5, "twitter",
+export default new StatSource(1000 * 60 * 60, "twitter",
     async () => {
         const {accessToken, refreshToken} = await getLoginCredentials();
 
         const autoRefresherPlugin = new TwitterApiAutoTokenRefresher({
             refreshToken,
             refreshCredentials: {
-                clientId: process.env.TWITTER_API_KEY as string,
-                clientSecret: process.env.TWITTER_API_SECRET as string
+                clientId: process.env.TWITTER_CLIENT_ID as string,
+                clientSecret: process.env.TWITTER_CLIENT_SECRET as string
             },
             onTokenUpdate(token) {
                 setLoginCredentials(token.accessToken, token.refreshToken);
@@ -93,7 +95,7 @@ export default new StatSource(1000 * 60 * 5, "twitter",
         };
     },
     async (req, res) => {
-        const {url, codeVerifier, state} = loginClient.generateOAuth2AuthLink("http://localhost:3000/callback/twitter", {scope: ["tweet.read", "users.read", "offline.access"]});
+        const {url, codeVerifier, state} = loginClient.generateOAuth2AuthLink(callbackUri, {scope: ["tweet.read", "users.read", "offline.access"]});
 
         await setLoginVerifierForState(state, codeVerifier);
 
@@ -114,7 +116,7 @@ export default new StatSource(1000 * 60 * 5, "twitter",
             const {accessToken, refreshToken} = await loginClient.loginWithOAuth2({
                 code,
                 codeVerifier,
-                redirectUri: "http://localhost:3000/callback/twitter"// TODO: Change this to your callback URL
+                redirectUri: callbackUri
             });
 
             // Get user ID
