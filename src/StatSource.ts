@@ -11,13 +11,15 @@ const deleteAll = async (colName: string) => {
 const deleteAllOnStart = process.env.DELETE_ALL_ON_START === "true";
 
 
-export type source = "twitter" | "time";
+export type source = "twitter" | "time" | "trello";
 
 type RefreshFunction = () => Promise<RefreshData>;
 
 interface RefreshData {
     stats: {
-        [key: string]: number;
+        [source: string]: {
+            [key: string]: number;
+        }
     }
 }
 
@@ -27,9 +29,9 @@ interface RefreshData {
 export class StatSource {
     /**
      * Create a new StatSource
-     * @param refreshFrequency
-     * @param source
-     * @param refresh
+     * @param {number} refreshFrequency
+     * @param {source} source
+     * @param {RefreshFunction} refresh
      */
     constructor(public refreshFrequency: number, public source: source, public refresh: RefreshFunction,
                 public loginFunction: (req: any, res: any) => Promise<any>,
@@ -58,7 +60,7 @@ export class StatSource {
                 stats
             });
             console.log(
-                `A document was inserted with the _id: ${result.insertedId}`,
+                `Inserted measurement into ${this.source} collection with _id: ${result.insertedId} ${JSON.stringify(stats).slice(0, 100)}`
             );
         } catch (e) {
             console.error(`Error ${e} for source ${this.source}`);

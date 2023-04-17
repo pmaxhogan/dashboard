@@ -9,7 +9,7 @@
     "moduleResolution": "node",
     "target": "es2017",
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
   "compileOnSave": true,
   "include": [

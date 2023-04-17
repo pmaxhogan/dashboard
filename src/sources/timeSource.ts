@@ -14,7 +14,9 @@ export default new StatSource(1000, "time", async () => {
     };
 
     return {
-        stats
+        stats: {
+            "clock": stats,
+        }
     };
 }, async (req, res) => {
     res.send("Hello world");

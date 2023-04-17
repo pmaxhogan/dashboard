@@ -109,7 +109,9 @@ export default new StatSource(useReal ? 1000 * 60 * 60 : 1000, "twitter",
         };
 
         return {
-            stats
+            stats: {
+                "profile": stats
+            }
         };
     },
     async (req, res) => {

@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <title>Hello!</title>
     <style>
-        #chart {
-            max-width: 650px;
-            margin: 35px auto;
+        #charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+        }
+
+        #charts > * {
+            margin: 10px;
         }
     </style>
 </head>
@@ -17,6 +21,9 @@
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     (async () => {
+        const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+
+
         const {url} = (await fetch("http://localhost:3000/login/twitter").then(response => response.json()));
         document.querySelector("#twitter-auth").addEventListener("click", () => {
             window.open(url, "_blank");
@@ -28,88 +35,97 @@
 
         const charts = document.querySelector("#charts");
         const proms = sources.map(async source => {
-            const chartElem = document.createElement("div");
-            chartElem.id = `chart-${source}`;
-            charts.appendChild(chartElem);
+            const {
+                series
+            } = await fetch(`http://localhost:3000/api/stats/${source}`).then(response => response.json());
+            const subSeries = Object.keys(series);
 
-            const titleCase = (str) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+            const seriesCharts = {};
 
-            const options = {
-                series: [],
-                chart: {
-                    type: "area",
-                    stacked: false,
-                    height: 350,
-                    zoom: {
-                        type: "x",
-                        enabled: true,
-                        autoScaleYaxis: true
-                    },
-                    toolbar: {
-                        autoSelected: "zoom"
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                markers: {
-                    size: 3,
-                },
-                title: {
-                    text: `${titleCase(source)} Source`,
-                    align: "left"
-                },
-                stroke: {
-                    curve: "straight"
-                },
-                fill: {
-                    type: "gradient",
-                    gradient: {
-                        shadeIntensity: 1,
-                        inverseColors: false,
-                        opacityFrom: 0.9,
-                        opacityTo: 0,
-                        stops: [0, 90, 100],
-                    },
-                },
-                yaxis: {
-                    labels: {
-                        formatter: function (val) {
-                            return val.toFixed(0);
+            for(const subSeriesOne of subSeries) {
+                const chartElem = document.createElement("div");
+                chartElem.id = `chart-${source}-${subSeriesOne}`;
+                charts.appendChild(chartElem);
+
+
+                const options = {
+                    series: [],
+                    chart: {
+                        type: "area",
+                        stacked: false,
+                        height: 350,
+                        zoom: {
+                            type: "x",
+                            enabled: true,
+                            autoScaleYaxis: true
                         },
+                        toolbar: {
+                            autoSelected: "zoom"
+                        }
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    markers: {
+                        size: 3,
                     },
                     title: {
-                        text: "Price"
+                        text: `${titleCase(source)} Source: ${titleCase(subSeriesOne)}`,
+                        align: "left"
                     },
-                },
-                xaxis: {
-                    type: "datetime",
-                },
-                tooltip: {
-                    shared: false,
-                    y: {
-                        formatter: function (val) {
-                            return val.toFixed(0)
+                    stroke: {
+                        curve: "straight"
+                    },
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            shadeIntensity: 1,
+                            inverseColors: false,
+                            opacityFrom: 0.9,
+                            opacityTo: 0,
+                            stops: [0, 90, 100],
+                        },
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: function (val) {
+                                return val.toFixed(0);
+                            },
+                        },
+                        title: {
+                            text: "Price"
+                        },
+                    },
+                    xaxis: {
+                        type: "datetime",
+                    },
+                    tooltip: {
+                        shared: false,
+                        y: {
+                            formatter: function (val) {
+                                return val.toFixed(0)
+                            }
                         }
                     }
-                }
-            };
+                };
 
-            const chart = new ApexCharts(chartElem, options);
-            chart.render();
+                const chart = new ApexCharts(chartElem, options);
+                chart.render();
+                seriesCharts[subSeriesOne] = chart;
+            }
 
-            async function update(){
+            async function update() {
                 const {
                     stats,
                     series
                 } = await fetch(`http://localhost:3000/api/stats/${source}`).then(response => response.json());
 
-                const seriesData = series.map(s => ({
-                    name: titleCase(s),
-                    data: stats.map(stat => [stat.timestamp, stat.stats[s]])
-                }));
-
-                chart.updateSeries(seriesData);
+                for(const subSeriesOne of subSeries) {
+                    seriesCharts[subSeriesOne].updateSeries(series[subSeriesOne].map(s => ({
+                        name: titleCase(s),
+                        data: stats.map(stat => [stat.timestamp, stat.stats[subSeriesOne][s]])
+                    })));
+                }
             }
 
             updateFns.push(update);
