@@ -13,13 +13,12 @@ const app = express();
 
 const sources:source[] = ["twitter", "time"];
 
-app.use(cors());
+app.use(cors({origin: process.env.CORS_ORIGIN}));
 
 app.get("/api/sources", async (req, res) => {
     res.send({sources});
 });
 
-// respond with "hello world" when a GET request is made to the homepage
 app.get("/api/stats/:source", async (req, res) => {
     const source = req.params.source;
 
@@ -28,18 +27,7 @@ app.get("/api/stats/:source", async (req, res) => {
         stats: results.map((result) => ({stats: result.stats.stats, timestamp: result.timestamp})),
         series: results.length ? Object.keys(results[0].stats.stats) : []
     });
-    // {"timestamp": {$gt: new Date(new Date().setHours(22, 15, 13))}}
 });
-
-app.get("/login/twitter", async (req, res) => {
-    await twitter.loginFunction(req, res);
-});
-
-app.get("/callback/twitter", async (req, res) => {
-    await twitter.callbackFunction(req, res);
-});
-
-app.listen(3000);
 
 const statSources = [
     twitter,
@@ -47,6 +35,8 @@ const statSources = [
 ];
 
 statSources.forEach((source) => {
+    source.setupRoutes(app);
+
     // noinspection JSIgnoredPromiseFromCall
     source.refreshStats();
     setInterval(() => {
@@ -54,3 +44,4 @@ statSources.forEach((source) => {
         source.refreshStats();
     }, source.refreshFrequency);
 });
+app.listen(3000);

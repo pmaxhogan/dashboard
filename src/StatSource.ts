@@ -1,11 +1,14 @@
 import db from "./db";
+import {config} from "dotenv";
+config();
 
-// @ts-ignore
 const deleteAll = async (colName: string) => {
     const collection = db.collection(colName);
     const result = await collection.deleteMany({});
     console.log(`Deleted ${result.deletedCount} documents`);
 };
+
+const deleteAllOnStart = process.env.DELETE_ALL_ON_START === "true";
 
 
 export type source = "twitter" | "time";
@@ -36,7 +39,7 @@ export class StatSource {
         this.source = source;
         this.refresh = refresh;
         this.loginFunction = loginFunction;
-        // deleteAll(this.source);
+        if (deleteAllOnStart) deleteAll(this.source);
     }
 
     /**
@@ -60,5 +63,15 @@ export class StatSource {
         } catch (e) {
             console.error(`Error ${e} for source ${this.source}`);
         }
+    }
+
+    public setupRoutes(app: any) {
+        app.get(`/login/${this.source}`, async (req: any, res: any) => {
+            await this.loginFunction(req, res);
+        });
+
+        app.get(`/callback/${this.source}`, async (req: any, res: any) => {
+            await this.callbackFunction(req, res);
+        });
     }
 }

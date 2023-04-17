@@ -5,14 +5,18 @@ import {StatSource} from "../StatSource";
 import {TwitterApi} from "twitter-api-v2";
 import {oauth} from "../db";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
+import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
 
 type TwitterStats = {
     followers: number;
+    following: number;
+    tweets: number;
+    lists: number;
 }
 
+const useReal = process.env.REAL_TWITTER === "true";
+
 const loginClient = new TwitterApi({
-    // appKey: process.env.TWITTER_API_KEY as string,
-    // appSecret: process.env.TWITTER_API_SECRET as string,
     clientId: process.env.TWITTER_CLIENT_ID as string,
     clientSecret: process.env.TWITTER_CLIENT_SECRET as string
 });
@@ -62,7 +66,7 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
     await twitterOauthDb.insertOne({accessToken, refreshToken, credentials: true});
 }
 
-export default new StatSource(1000 * 60 * 60, "twitter",
+export default new StatSource(useReal ? 1000 * 60 * 60 : 1000, "twitter",
     async () => {
         const {accessToken, refreshToken} = await getLoginCredentials();
 
@@ -79,15 +83,29 @@ export default new StatSource(1000 * 60 * 60, "twitter",
 
         const client = new TwitterApi(accessToken, {plugins: [autoRefresherPlugin]});
 
+        let data:UserV2;
 
-        const {data} = await client.v2.me({
-            "user.fields": ["description", "id", "location", "name", "profile_image_url", "public_metrics", "username"]
-        });
-        console.log(data);
+        if (useReal) {
+            data = (await client.v2.me({
+                "user.fields": ["description", "id", "location", "name", "profile_image_url", "public_metrics", "username"]
+            })).data;
+        } else {
+            data = {
+                "public_metrics": {
+                    "followers_count": 363,
+                    "following_count": 383,
+                    "tweet_count": 355,
+                    "listed_count": 0
+                },
+            } as UserV2;
+        }
 
 
         const stats: TwitterStats = {
-            followers: 0
+            followers: data?.public_metrics?.followers_count ?? 0,
+            following: data?.public_metrics?.following_count ?? 0,
+            tweets: data?.public_metrics?.tweet_count ?? 0,
+            lists: data?.public_metrics?.listed_count ?? 0
         };
 
         return {
@@ -119,15 +137,11 @@ export default new StatSource(1000 * 60 * 60, "twitter",
                 redirectUri: callbackUri
             });
 
-            // Get user ID
-            // const concernedUser = await client.v2.me()
-
-            // Store credentials
             await setLoginCredentials(accessToken, refreshToken);
         } catch (e) {
             return res.status(403).send("Invalid verifier or access tokens!");
         }
 
-        res.send("You are now logged in!");
+        res.send("<!DOCTYPE html><script>close();</script>You can now close this window!");
     }
 );

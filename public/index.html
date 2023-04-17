@@ -11,11 +11,17 @@
     </style>
 </head>
 <body>
+<button id="twitter-auth">Auth Twitter</button>
 <div id="charts">
 </div>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
     (async () => {
+        const {url} = (await fetch("http://localhost:3000/login/twitter").then(response => response.json()));
+        document.querySelector("#twitter-auth").addEventListener("click", () => {
+            window.open(url, "_blank");
+        });
+
         const sources = (await fetch("http://localhost:3000/api/sources").then(response => response.json())).sources;
 
         const updateFns = [];
