@@ -2,8 +2,9 @@ import {config} from "dotenv";
 config();
 
 import twitter from "./sources/twitter";
-import testSource from "./sources/timeSource";
+import time from "./sources/timeSource";
 import trello from "./sources/trello";
+import gmail from "./sources/gmail";
 
 import express from "express";
 import db from "./db";
@@ -12,7 +13,7 @@ import {source} from "./StatSource";
 
 const app = express();
 
-const sources:source[] = ["twitter", "time", "trello"];
+const sources:source[] = ["twitter", "time", "trello", "gmail"];
 
 app.use(cors({origin: process.env.CORS_ORIGIN}));
 
@@ -35,18 +36,19 @@ app.get("/api/stats/:source", async (req, res) => {
 
 const statSources = [
     twitter,
-    testSource,
-    trello
+    time,
+    trello,
+    gmail
 ];
 
 statSources.forEach((source) => {
     source.setupRoutes(app);
 
     // noinspection JSIgnoredPromiseFromCall
-    source.refreshStats();
+    // source.refreshStats();
     setInterval(() => {
         // noinspection JSIgnoredPromiseFromCall
-        source.refreshStats();
+        // source.refreshStats();
     }, source.refreshFrequency);
 });
 app.listen(3000);

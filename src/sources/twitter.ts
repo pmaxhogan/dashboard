@@ -119,7 +119,7 @@ export default new StatSource(useReal ? 1000 * 60 * 60 : 1000, "twitter",
 
         await setLoginVerifierForState(state, codeVerifier);
 
-        res.send({url});
+        res.redirect(url);
     },
     async (req, res) => {
         // Extract state and code from query string

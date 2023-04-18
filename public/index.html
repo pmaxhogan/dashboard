@@ -15,7 +15,8 @@
     </style>
 </head>
 <body>
-<button id="twitter-auth">Auth Twitter</button>
+<a href="http://localhost:3000/login/twitter">Auth Twitter</a>
+<a href="http://localhost:3000/login/gmail">Auth Gmail</a>
 <div id="charts">
 </div>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -23,11 +24,6 @@
     (async () => {
         const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 
-
-        const {url} = (await fetch("http://localhost:3000/login/twitter").then(response => response.json()));
-        document.querySelector("#twitter-auth").addEventListener("click", () => {
-            window.open(url, "_blank");
-        });
 
         const sources = (await fetch("http://localhost:3000/api/sources").then(response => response.json())).sources;
 
@@ -93,7 +89,7 @@
                             },
                         },
                         title: {
-                            text: "Price"
+                            text: "Value"
                         },
                     },
                     xaxis: {

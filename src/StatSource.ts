@@ -2,6 +2,10 @@ import db from "./db";
 import {config} from "dotenv";
 config();
 
+// create like so:
+// use homepage
+// db.createCollection("X", {timeseries: {timeField: "timestamp", metaField: "metadata", granularity: "seconds"}})
+
 const deleteAll = async (colName: string) => {
     const collection = db.collection(colName);
     const result = await collection.deleteMany({});
@@ -11,7 +15,7 @@ const deleteAll = async (colName: string) => {
 const deleteAllOnStart = process.env.DELETE_ALL_ON_START === "true";
 
 
-export type source = "twitter" | "time" | "trello";
+export type source = "twitter" | "time" | "trello" | "gmail";
 
 type RefreshFunction = () => Promise<RefreshData>;
 
@@ -67,6 +71,10 @@ export class StatSource {
         }
     }
 
+    /**
+     * Setup the routes for this source
+     * @param {any} app The express app
+     */
     public setupRoutes(app: any) {
         app.get(`/login/${this.source}`, async (req: any, res: any) => {
             await this.loginFunction(req, res);
