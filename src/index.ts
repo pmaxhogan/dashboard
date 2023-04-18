@@ -45,10 +45,10 @@ statSources.forEach((source) => {
     source.setupRoutes(app);
 
     // noinspection JSIgnoredPromiseFromCall
-    // source.refreshStats();
+    source.refreshStats();
     setInterval(() => {
         // noinspection JSIgnoredPromiseFromCall
-        // source.refreshStats();
+        source.refreshStats();
     }, source.refreshFrequency);
 });
 app.listen(3000);
