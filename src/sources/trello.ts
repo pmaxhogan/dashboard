@@ -112,7 +112,7 @@ for (const list of progressLists) {
 await Promise.all(proms);
 
 
-export default new StatSource(5000, "trello",
+export default new StatSource(1000 * 60 * 15, "trello",
     async () => {
         const numCardsByList = {} as { [key: string]: number };
         for (const [listId, cards] of listToCards) {

@@ -43,7 +43,7 @@ async function saveCredentials(credentials:Credentials) {
     console.log(`Saved credentials: ${saved.insertedId}`);
 }
 
-export default new StatSource(1000 * 60 * 5, "gmail",
+export default new StatSource(1000 * 60 * 15, "gmail",
     async () => {
         const stats = {
             num_unread: 0
