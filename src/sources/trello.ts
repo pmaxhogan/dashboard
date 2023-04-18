@@ -1,8 +1,7 @@
 import {config} from "dotenv";
+import {StatSource} from "../StatSource";
 // import fetch from "node-fetch";
 config();
-
-import {StatSource} from "../StatSource";
 
 type TrelloStats = {
     num_cards_by_list: {
@@ -65,55 +64,58 @@ const fieldId = process.env.TRELLO_FIELD_ID as string;
 async function getCardsInList(listId: string,) {
     const url = `https://api.trello.com/1/lists/${listId}/cards?key=${key}&token=${token}&customFieldItems=true&fields=labels,customFieldItems`;
     const response = await fetch(url);
-    const cards = await response.json() as TrelloCard[];
-    return cards;
+    return await response.json() as TrelloCard[];
 }
 
+/**
+ * Get all the custom field options for a given field
+ * @param {string} fieldId
+ * @return {Promise<CustomFieldOptions[]>} The options
+ */
 async function getValuesForField(fieldId: string) {
     const url = `https://api.trello.com/1/customFields/${fieldId}/options?key=${key}&token=${token}`;
     const response = await fetch(url);
-    const values = await response.json() as CustomFieldOptions[];
-    return values;
+    return await response.json() as CustomFieldOptions[];
 }
 
+/**
+ * Get the name of a list given its id
+ * @param {string} listId
+ * @return {string} The name of the list
+ */
 async function getNameOfList(listId: string) {
     const url = `https://api.trello.com/1/lists/${listId}?key=${key}&token=${token}&fields=name`;
     const response = await fetch(url);
     const list = await response.json();
-    return list.name;
+    return list.name as string;
 }
 
-
-const listIdToName = new Map<string, string>();
-for (const list of progressLists) {
-    listIdToName.set(list, await getNameOfList(list));
-}
-
-
-//
-
-
-const fieldIdToTimeMinutes = new Map<string, number>();
-const values = await getValuesForField(fieldId);
-for (const value of values) {
-    const split = value.value.text.split(" - ");
-    const last = split[split.length - 1];
-    const isMin = last.includes("min");
-    const isMax = last.includes("+");
-    const time = parseInt(split[split.length - 1].replace(/[^0-9]/g, "")) * (isMin ? 1 : 60) * (isMax ? 1.5 : 1);
-    fieldIdToTimeMinutes.set(value._id, time);
-}
-
-const listToCards = new Map<string, TrelloCard[]>();
-const proms = [];
-for (const list of progressLists) {
-    proms.push(getCardsInList(list).then((cards) => listToCards.set(list, cards)));
-}
-await Promise.all(proms);
-
-
-export default new StatSource(1000 * 60 * 15, "trello",
+export default new StatSource(1000 * 60 * 5, "trello",
     async () => {
+        const listIdToName = new Map<string, string>();
+        for (const list of progressLists) {
+            listIdToName.set(list, await getNameOfList(list));
+        }
+
+        const fieldIdToTimeMinutes = new Map<string, number>();
+        const values = await getValuesForField(fieldId);
+        for (const value of values) {
+            const split = value.value.text.split(" - ");
+            const last = split[split.length - 1];
+            const isMin = last.includes("min");
+            const isMax = last.includes("+");
+            const time = parseInt(split[split.length - 1].replace(/[^0-9]/g, "")) * (isMin ? 1 : 60) * (isMax ? 1.5 : 1);
+            fieldIdToTimeMinutes.set(value._id, time);
+        }
+
+        const listToCards = new Map<string, TrelloCard[]>();
+        const proms = [];
+        for (const list of progressLists) {
+            proms.push(getCardsInList(list).then((cards) => listToCards.set(list, cards)));
+        }
+        await Promise.all(proms);
+
+
         const numCardsByList = {} as { [key: string]: number };
         for (const [listId, cards] of listToCards) {
             numCardsByList[listIdToName.get(listId) as string] = cards.length;
