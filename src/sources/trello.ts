@@ -8,7 +8,7 @@ type TrelloStats = {
     num_cards_by_list: {
         [key: string]: number;
     },
-    num_cars_by_label: {
+    num_cards_by_label: {
         [key: string]: number;
     },
     total_time_in_list: {
@@ -159,7 +159,7 @@ export default new StatSource(5000, "trello",
 
         const stats = {
             num_cards_by_list: numCardsByList,
-            num_cars_by_label: numCardsByLabel,
+            num_cards_by_label: numCardsByLabel,
             total_time_in_list: totalTimeInList,
             total_time_in_label: totalTimeInLabel
         } as TrelloStats;

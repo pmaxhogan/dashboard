@@ -46,7 +46,7 @@ statSources.forEach((source) => {
     source.refreshStats();
     setInterval(() => {
         // noinspection JSIgnoredPromiseFromCall
-        // source.refreshStats();
+        source.refreshStats();
     }, source.refreshFrequency);
 });
 app.listen(3000);
