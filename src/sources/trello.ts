@@ -1,5 +1,5 @@
 import {config} from "dotenv";
-import {StatSource} from "../StatSource";
+import {Source, StatSource} from "../StatSource";
 // import fetch from "node-fetch";
 config();
 
@@ -90,7 +90,7 @@ async function getNameOfList(listId: string) {
     return list.name as string;
 }
 
-export default new StatSource(1000 * 60 * 5, "trello",
+export default new StatSource(1000 * 60 * 5, Source.TRELLO,
     async () => {
         const listIdToName = new Map<string, string>();
         for (const list of progressLists) {

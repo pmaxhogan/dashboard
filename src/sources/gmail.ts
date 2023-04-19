@@ -1,9 +1,10 @@
 import {config} from "dotenv";
-config();
-import {gmail, auth} from "@googleapis/gmail";
-import {StatSource} from "../StatSource";
+import {auth, gmail} from "@googleapis/gmail";
+import {Source, StatSource} from "../StatSource";
 import {oauth} from "../db";
 import {Credentials} from "google-auth-library/build/src/auth/credentials";
+
+config();
 
 const {OAuth2} = auth;
 const callbackUri = `${process.env.API_BASE}/callback/gmail`;
@@ -43,7 +44,7 @@ async function saveCredentials(credentials:Credentials) {
     console.log(`Saved credentials: ${saved.insertedId}`);
 }
 
-export default new StatSource(1000 * 60 * 5, "gmail",
+export default new StatSource(1000 * 60 * 5, Source.GMAIL,
     async () => {
         const stats = {
             num_unread: 0

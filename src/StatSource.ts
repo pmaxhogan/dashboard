@@ -14,8 +14,12 @@ const deleteAll = async (colName: string) => {
 
 const deleteAllOnStart = process.env.DELETE_ALL_ON_START === "true";
 
-
-export type source = "twitter" | "time" | "trello" | "gmail";
+export enum Source {
+    TWITTER = "twitter",
+    TIME = "time",
+    TRELLO = "trello",
+    GMAIL = "gmail"
+}
 
 type RefreshFunction = () => Promise<RefreshData>;
 
@@ -34,10 +38,10 @@ export class StatSource {
     /**
      * Create a new StatSource
      * @param {number} refreshFrequency
-     * @param {source} source
+     * @param {Source} source
      * @param {RefreshFunction} refresh
      */
-    constructor(public refreshFrequency: number, public source: source, public refresh: RefreshFunction,
+    constructor(public refreshFrequency: number, public source: Source, public refresh: RefreshFunction,
                 public loginFunction: (req: any, res: any) => Promise<any>,
                 public callbackFunction: (req: any, res: any) => Promise<any>,
     ) {

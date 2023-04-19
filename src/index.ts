@@ -9,11 +9,11 @@ import gmail from "./sources/gmail";
 import express from "express";
 import db from "./db";
 import cors from "cors";
-import {source} from "./StatSource";
+import {Source} from "./StatSource";
 
 const app = express();
 
-const sources:source[] = ["twitter", "time", "trello", "gmail"];
+const sources = Object.keys(Source);
 
 app.use(cors({origin: process.env.CORS_ORIGIN}));
 
@@ -24,7 +24,12 @@ app.get("/api/sources", async (req, res) => {
 app.get("/api/stats/:source", async (req, res) => {
     const source = req.params.source;
 
-    const results = await db.collection(source).find({}).sort({timestamp: -1}).limit(250).toArray();
+    if (!sources.includes(source)) {
+        res.status(400).send({error: "Invalid source"});
+        return;
+    }
+
+    const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).limit(250).toArray();
     res.send({
         stats: results.map((result) => ({stats: result.stats.stats, timestamp: result.timestamp})),
         series: results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {

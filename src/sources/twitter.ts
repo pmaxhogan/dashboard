@@ -1,7 +1,7 @@
 import {config} from "dotenv";
 config();
 
-import {StatSource} from "../StatSource";
+import {Source, StatSource} from "../StatSource";
 import {TwitterApi} from "twitter-api-v2";
 import {oauth} from "../db";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
@@ -66,7 +66,7 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
     await twitterOauthDb.insertOne({accessToken, refreshToken, credentials: true});
 }
 
-export default new StatSource(useReal ? 1000 * 60 * 60 : 1000, "twitter",
+export default new StatSource(useReal ? 1000 * 60 * 60 : 1000, Source.TWITTER,
     async () => {
         const {accessToken, refreshToken} = await getLoginCredentials();
 
