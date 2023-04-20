@@ -9,13 +9,11 @@
     "moduleResolution": "node",
     "target": "es2017",
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
   },
   "compileOnSave": true,
   "include": [
     "src"
   ],
-  // other settings...
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"

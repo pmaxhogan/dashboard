@@ -1,9 +1,9 @@
 import {config} from "dotenv";
 config();
 
-import {Source, StatSource} from "../StatSource";
+import {Source, StatSource} from "../StatSource.js";
 import {TwitterApi} from "twitter-api-v2";
-import {oauth} from "../db";
+import {oauth} from "../db.js";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
 import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
 

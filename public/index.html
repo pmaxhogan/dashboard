@@ -114,7 +114,7 @@
                 const {
                     stats,
                     series
-                } = await fetch(`http://localhost:3000/api/stats/${source}`).then(response => response.json());
+                } = await fetch(`/api/stats/${source}`).then(response => response.json());
 
                 for(const subSeriesOne of subSeries) {
                     seriesCharts[subSeriesOne].updateSeries(series[subSeriesOne].map(s => ({

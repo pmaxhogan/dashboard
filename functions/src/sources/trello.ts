@@ -1,6 +1,5 @@
 import {config} from "dotenv";
-import {Source, StatSource} from "../StatSource";
-// import fetch from "node-fetch";
+import {Source, StatSource} from "../StatSource.js";
 config();
 
 type TrelloStats = {

@@ -1,15 +1,16 @@
+import * as functions from "firebase-functions";
 import {config} from "dotenv";
 config();
 
-import twitter from "./sources/twitter";
-import time from "./sources/timeSource";
-import trello from "./sources/trello";
-import gmail from "./sources/gmail";
+import twitter from "./sources/twitter.js";
+import time from "./sources/timeSource.js";
+import trello from "./sources/trello.js";
+import gmail from "./sources/gmail.js";
 
 import express from "express";
-import db from "./db";
+import db from "./db.js";
 import cors from "cors";
-import {Source, StatSource} from "./StatSource";
+import {Source, StatSource} from "./StatSource.js";
 
 const app = express();
 
@@ -84,17 +85,24 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 for (const statSource of statSources) {
     statSource.setupRoutes(app);
-
-    let timeUntilNext = await checkAndRefresh(statSource);
-    console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
-    setTimeout(async () => {
-        // noinspection InfiniteLoopJS
-        while (true) { // eslint-disable-line no-constant-condition
-            timeUntilNext = await checkAndRefresh(statSource);
-            console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
-            await sleep(timeUntilNext);
-        }
-    }, timeUntilNext);
 }
 
-app.listen(3000);
+async function checkForUpdates() {
+    for (const statSource of statSources) {
+        let timeUntilNext = await checkAndRefresh(statSource);
+        console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
+        setTimeout(async () => {
+            // noinspection InfiniteLoopJS
+            while (true) { // eslint-disable-line no-constant-condition
+                timeUntilNext = await checkAndRefresh(statSource);
+                console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
+                await sleep(timeUntilNext);
+            }
+        }, timeUntilNext);
+    }
+}
+
+export const api = functions.https.onRequest(app);
+export const updateStats = functions.pubsub.schedule("every 5 minutes").onRun(checkForUpdates);
+await checkForUpdates();
+

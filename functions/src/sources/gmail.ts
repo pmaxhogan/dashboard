@@ -1,7 +1,7 @@
 import {config} from "dotenv";
 import {auth, gmail} from "@googleapis/gmail";
-import {Source, StatSource} from "../StatSource";
-import {oauth} from "../db";
+import {Source, StatSource} from "../StatSource.js";
+import {oauth} from "../db.js";
 import {Credentials} from "google-auth-library/build/src/auth/credentials";
 
 config();
