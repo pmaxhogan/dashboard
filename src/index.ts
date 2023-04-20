@@ -9,7 +9,7 @@ import gmail from "./sources/gmail";
 import express from "express";
 import db from "./db";
 import cors from "cors";
-import {Source} from "./StatSource";
+import {Source, StatSource} from "./StatSource";
 
 const app = express();
 
@@ -46,19 +46,55 @@ const statSources = [
     gmail
 ];
 
-statSources.forEach((source) => {
-    source.setupRoutes(app);
+/**
+ * Get the latest stats for a source
+ * @param {Source} source
+ */
+async function latestStats(source: Source) {
+    const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).limit(1).toArray();
+    return results[0];
+}
 
-    if (process.env[`SOURCE_IS_SENSITIVE_${source.source.toUpperCase()}`] === "true") {
-        console.log(`Source ${source.source} is sensitive, not refreshing on startup`);
+/**
+ * Check if a stat source needs to be refreshed, and refresh it if it does
+ * @param {StatSource} statSource The stat source to check
+ * @return {Promise<number>} The time in ms until the next refresh (call this function again)
+ */
+async function checkAndRefresh(statSource: StatSource) {
+    const variance = Math.min(acceptableTimeVariance, statSource.refreshFrequency / 2);
+
+    const latest = await latestStats(statSource.source);
+    const latestTimestamp = latest ? latest.timestamp : 0;
+    const now = new Date();
+    const elapsedTimeSinceLastUpdate = now.getTime() - latestTimestamp;
+    const refreshTime = statSource.refreshFrequency;
+    const doRefresh = elapsedTimeSinceLastUpdate + variance > refreshTime;
+    console.log(`Source ${statSource.source} updated ${elapsedTimeSinceLastUpdate / 1000}/${refreshTime / 1000} seconds ago (${doRefresh ? "refreshing" : "not refreshing"})`);
+    if (doRefresh) {
+        await statSource.refreshStats();
+        return refreshTime;
     } else {
-        // noinspection JSIgnoredPromiseFromCall
-        source.refreshStats();
+        return refreshTime - elapsedTimeSinceLastUpdate;
     }
+}
 
-    setInterval(() => {
-        // noinspection JSIgnoredPromiseFromCall
-        source.refreshStats();
-    }, source.refreshFrequency);
-});
+const acceptableTimeVariance = 1000 * 10;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+for (const statSource of statSources) {
+    statSource.setupRoutes(app);
+
+    let timeUntilNext = await checkAndRefresh(statSource);
+    console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
+    setTimeout(async () => {
+        // noinspection InfiniteLoopJS
+        while (true) { // eslint-disable-line no-constant-condition
+            timeUntilNext = await checkAndRefresh(statSource);
+            console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
+            await sleep(timeUntilNext);
+        }
+    }, timeUntilNext);
+}
+
 app.listen(3000);
