@@ -18,11 +18,15 @@ const sources = Object.keys(Source);
 
 app.use(cors({origin: process.env.CORS_ORIGIN}));
 
-app.get("/api/sources", async (req, res) => {
+app.get("/", async (req, res) => {
+    res.send("/");
+});
+
+app.get("/sources", async (req, res) => {
     res.send({sources});
 });
 
-app.get("/api/stats/:source", async (req, res) => {
+app.get("/stats/:source", async (req, res) => {
     const source = req.params.source;
 
     if (!sources.includes(source)) {
@@ -103,6 +107,7 @@ async function checkForUpdates() {
 }
 
 export const api = functions.https.onRequest(app);
+// noinspection JSUnusedGlobalSymbols
 export const updateStats = functions.pubsub.schedule("every 5 minutes").onRun(checkForUpdates);
 await checkForUpdates();
 

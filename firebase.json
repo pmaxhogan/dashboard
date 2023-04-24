@@ -10,6 +10,7 @@
         "firebase-debug.*.log"
       ],
       "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" install",
         "npm --prefix \"$RESOURCE_DIR\" run lint",
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ]
@@ -22,6 +23,10 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "rewrites": [ {
+      "source": "/api/**",
+      "function": "api"
+    } ],
     "frameworksBackend": {
       "region": "us-central1"
     }

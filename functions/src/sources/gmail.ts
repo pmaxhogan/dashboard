@@ -2,7 +2,6 @@ import {config} from "dotenv";
 import {auth, gmail} from "@googleapis/gmail";
 import {Source, StatSource} from "../StatSource.js";
 import {oauth} from "../db.js";
-import {Credentials} from "google-auth-library/build/src/auth/credentials";
 
 config();
 
@@ -31,14 +30,14 @@ async function getCredentials() {
     if (!doc || !doc.auth) {
         throw new Error("No credentials found!");
     }
-    return doc.auth as Credentials;
+    return doc.auth as any;
 }
 
 /**
  * Set the login credentials
  * @param {Credentials} credentials The credentials
  */
-async function saveCredentials(credentials:Credentials) {
+async function saveCredentials(credentials:any) {
     await gmailOauthDb.deleteMany({credentials: true});
     const saved = await gmailOauthDb.insertOne({credentials: true, auth: credentials});
     console.log(`Saved credentials: ${saved.insertedId}`);

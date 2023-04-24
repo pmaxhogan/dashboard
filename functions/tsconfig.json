@@ -9,6 +9,8 @@
     "moduleResolution": "node",
     "target": "es2017",
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
   },
   "compileOnSave": true,
   "include": [
