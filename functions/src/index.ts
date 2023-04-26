@@ -1,6 +1,8 @@
 import * as functions from "firebase-functions";
 import {config} from "dotenv";
+console.error("Starting");
 config();
+console.error("Starting2");
 
 import twitter from "./sources/twitter.js";
 import time from "./sources/timeSource.js";

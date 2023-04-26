@@ -70,8 +70,8 @@ export class StatSource {
             console.log(
                 `Inserted measurement into ${this.source} collection with _id: ${result.insertedId} ${JSON.stringify(stats).slice(0, 100)}`
             );
-        } catch (e) {
-            console.error(`Error ${e} for source ${this.source}`);
+        } catch (e:any) {
+            console.error(`Error ${e} for source ${this.source} ${e?.stack.toString()}}`);
         }
     }
 
