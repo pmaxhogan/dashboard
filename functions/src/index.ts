@@ -1,8 +1,9 @@
 import * as functions from "firebase-functions";
+
 import {config} from "dotenv";
-console.error("Starting");
+import prodConfig from "./prodConfig.js";
 config();
-console.error("Starting2");
+prodConfig();
 
 import twitter from "./sources/twitter.js";
 import time from "./sources/timeSource.js";
@@ -36,7 +37,7 @@ app.get("/stats/:source", async (req, res) => {
         return;
     }
 
-    const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).limit(250).toArray();
+    const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).toArray();
     res.send({
         stats: results.map((result) => ({stats: result.stats.stats, timestamp: result.timestamp})),
         series: results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
@@ -111,5 +112,3 @@ async function checkForUpdates() {
 export const api = functions.https.onRequest(app);
 // noinspection JSUnusedGlobalSymbols
 export const updateStats = functions.pubsub.schedule("every 5 minutes").onRun(checkForUpdates);
-await checkForUpdates();
-
