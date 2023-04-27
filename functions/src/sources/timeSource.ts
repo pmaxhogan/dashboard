@@ -1,3 +1,6 @@
+import prodConfig from "../prodConfig.js";
+prodConfig();
+
 import {Source, StatSource} from "../StatSource.js";
 
 type TestStats = {

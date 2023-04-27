@@ -15,7 +15,7 @@ export default function Source({source}) {
         const {
             series: subCharts,
             stats: datapoints
-        } = await fetch(`${apiBase}/api/stats/${source}`).then(response => response.json());
+        } = await fetch(`${apiBase}/stats/${source}`).then(response => response.json());
         const subchartNames = Object.keys(subCharts);
         setSubchartNames(subchartNames);
         console.log("subCharts", subCharts, datapoints);
@@ -88,6 +88,12 @@ export default function Source({source}) {
             },
             xaxis: {
                 type: "datetime",
+                labels: {
+                    formatter: function (value, timestamp) {
+                        return (new Date(timestamp)).toLocaleTimeString() // The formatter function overrides format property
+                    },
+                }
+                // tickAmount: 6
             },
             tooltip: {
                 shared: false,

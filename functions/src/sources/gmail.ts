@@ -1,9 +1,9 @@
-import {config} from "dotenv";
+import prodConfig from "../prodConfig.js";
+prodConfig();
+
 import {auth, gmail} from "@googleapis/gmail";
 import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
-
-config();
 
 const {OAuth2} = auth;
 const callbackUri = `${process.env.API_BASE}/callback/gmail`;

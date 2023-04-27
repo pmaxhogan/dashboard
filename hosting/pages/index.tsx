@@ -6,7 +6,7 @@ import SourceButton from "../components/sourcebutton";
 
 
 export default function IndexPage() {
-    const {data: sourcesData, error: sourcesError} = useSWR(`${apiBase}/api/sources`, fetcher);
+    const {data: sourcesData, error: sourcesError} = useSWR(`${apiBase}/sources`, fetcher);
     if (sourcesError || !sourcesData) return null;
     const sources = sourcesData.sources;
 

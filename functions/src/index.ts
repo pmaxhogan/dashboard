@@ -1,8 +1,6 @@
 import * as functions from "firebase-functions";
 
-import {config} from "dotenv";
 import prodConfig from "./prodConfig.js";
-config();
 prodConfig();
 
 import twitter from "./sources/twitter.js";

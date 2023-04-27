@@ -1,4 +1,7 @@
+import {config} from "dotenv";
+
 export default function prodConfig() {
+    config();
     const isProd = process.env.USER !== "max"; // :(
     console.log(`isProd: ${isProd}`);
     if (isProd) {

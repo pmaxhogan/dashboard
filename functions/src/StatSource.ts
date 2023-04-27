@@ -1,6 +1,7 @@
-import {config} from "dotenv";
 import {getDb} from "./db.js";
-config();
+import prodConfig from "./prodConfig.js";
+
+prodConfig();
 
 // create like so:
 // use homepage

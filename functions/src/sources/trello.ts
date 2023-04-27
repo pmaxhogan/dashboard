@@ -1,6 +1,7 @@
-import {config} from "dotenv";
+import prodConfig from "../prodConfig.js";
+prodConfig();
+
 import {Source, StatSource} from "../StatSource.js";
-config();
 
 type TrelloStats = {
     num_cards_by_list: {

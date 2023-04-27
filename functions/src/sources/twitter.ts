@@ -1,11 +1,11 @@
-import {config} from "dotenv";
-config();
-
+import prodConfig from "../prodConfig.js";
 import {Source, StatSource} from "../StatSource.js";
 import {TwitterApi} from "twitter-api-v2";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
 import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
 import {getOauthDb} from "../db.js";
+
+prodConfig();
 
 type TwitterStats = {
     followers: number;
@@ -13,8 +13,6 @@ type TwitterStats = {
     tweets: number;
     lists: number;
 }
-
-const useReal = process.env.REAL_TWITTER === "true";
 
 const loginClient = new TwitterApi({
     clientId: process.env.TWITTER_CLIENT_ID as string,
@@ -68,7 +66,7 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
     await twitterOauthDb.insertOne({accessToken, refreshToken, credentials: true});
 }
 
-export default new StatSource(useReal ? 1000 * 60 * 60 : 1000 * 60, Source.TWITTER,
+export default new StatSource(1000 * 60 * 60, Source.TWITTER,
     async () => {
         const {accessToken, refreshToken} = await getLoginCredentials();
 
@@ -87,7 +85,9 @@ export default new StatSource(useReal ? 1000 * 60 * 60 : 1000 * 60, Source.TWITT
 
         let data:UserV2;
 
-        if (useReal) {
+        const real = process.env.REAL_TWITTER === "true";
+        console.log("real", real);
+        if (real) {
             data = (await client.v2.me({
                 "user.fields": ["description", "id", "location", "name", "profile_image_url", "public_metrics", "username"]
             })).data;
