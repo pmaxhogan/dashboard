@@ -1,5 +1,5 @@
-import db from "./db.js";
 import {config} from "dotenv";
+import {getDb} from "./db.js";
 config();
 
 // create like so:
@@ -7,6 +7,7 @@ config();
 // db.createCollection("X", {timeseries: {timeField: "timestamp", metaField: "metadata", granularity: "seconds"}})
 
 const deleteAll = async (colName: string) => {
+    const db = await getDb();
     const collection = db.collection(colName);
     const result = await collection.deleteMany({});
     console.log(`Deleted ${result.deletedCount} documents`);
@@ -56,6 +57,7 @@ export class StatSource {
      * Refresh the stats and save them to the database
      */
     public async refreshStats(): Promise<void> {
+        const db = await getDb();
         try {
             const stats = await this.refresh();
 

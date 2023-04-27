@@ -3,9 +3,9 @@ config();
 
 import {Source, StatSource} from "../StatSource.js";
 import {TwitterApi} from "twitter-api-v2";
-import {oauth} from "../db.js";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
 import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
+import {getOauthDb} from "../db.js";
 
 type TwitterStats = {
     followers: number;
@@ -21,8 +21,6 @@ const loginClient = new TwitterApi({
     clientSecret: process.env.TWITTER_CLIENT_SECRET as string
 });
 
-const twitterOauthDb = oauth.collection("twitter");
-
 const callbackUri = `${process.env.API_BASE}/callback/twitter`;
 
 /**
@@ -30,6 +28,7 @@ const callbackUri = `${process.env.API_BASE}/callback/twitter`;
  * @param {string} state The state parameter
  */
 async function getLoginVerifierFromState(state: string) {
+    const twitterOauthDb = (await getOauthDb()).collection("twitter");
     const doc = await twitterOauthDb.findOne({state});
     if (doc) {
         return doc.codeVerifier;
@@ -42,6 +41,7 @@ async function getLoginVerifierFromState(state: string) {
  * @param {string} verifier The verifier parameter
  */
 async function setLoginVerifierForState(state: string, verifier: string) {
+    const twitterOauthDb = (await getOauthDb()).collection("twitter");
     await twitterOauthDb.insertOne({state, codeVerifier: verifier});
 }
 
@@ -49,6 +49,7 @@ async function setLoginVerifierForState(state: string, verifier: string) {
  * Get the login credentials
  */
 async function getLoginCredentials() {
+    const twitterOauthDb = (await getOauthDb()).collection("twitter");
     const doc = await twitterOauthDb.findOne({credentials: true});
     if (!doc || !doc.accessToken || !doc.refreshToken) {
         throw new Error("No credentials found!");
@@ -62,11 +63,12 @@ async function getLoginCredentials() {
  * @param {string | undefined} refreshToken
  */
 async function setLoginCredentials(accessToken: string, refreshToken: string | undefined) {
+    const twitterOauthDb = (await getOauthDb()).collection("twitter");
     await twitterOauthDb.deleteMany({credentials: true});
     await twitterOauthDb.insertOne({accessToken, refreshToken, credentials: true});
 }
 
-export default new StatSource(useReal ? 1000 * 60 * 60 : 1000, Source.TWITTER,
+export default new StatSource(useReal ? 1000 * 60 * 60 : 1000 * 60, Source.TWITTER,
     async () => {
         const {accessToken, refreshToken} = await getLoginCredentials();
 

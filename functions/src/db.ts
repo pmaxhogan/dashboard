@@ -1,15 +1,29 @@
-import {MongoClient, ServerApiVersion} from "mongodb";
+import {Db, MongoClient, ServerApiVersion} from "mongodb";
 
 const uri = process.env.MONGODB_URI as string;
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-export const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
-});
-export const oauth = client.db("oauth");
 
+let _db:Db|null = null;
+let _client:MongoClient|null = null;
 
-export default client.db("homepage");
+export const getClient = async () => {
+    if (_client) return _client;
+    _client = new MongoClient(uri, {
+        serverApi: {
+            version: ServerApiVersion.v1,
+            strict: true,
+            deprecationErrors: true,
+        }
+    });
+    await _client.connect();
+    return _client;
+};
+
+export const getDb = async () => {
+    if (_db) return _db;
+    _db = (await getClient()).db("homepage");
+    return _db;
+};
+
+export const getOauthDb = async () => {
+    return (await getClient()).db("oauth");
+};

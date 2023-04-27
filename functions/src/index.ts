@@ -11,9 +11,9 @@ import trello from "./sources/trello.js";
 import gmail from "./sources/gmail.js";
 
 import express from "express";
-import db from "./db.js";
 import cors from "cors";
 import {Source, StatSource} from "./StatSource.js";
+import {getDb} from "./db.js";
 
 const app = express();
 
@@ -30,6 +30,8 @@ app.get("/sources", async (req, res) => {
 });
 
 app.get("/stats/:source", async (req, res) => {
+    const db = await getDb();
+
     const source = req.params.source;
 
     if (!sources.includes(source)) {
@@ -47,6 +49,11 @@ app.get("/stats/:source", async (req, res) => {
     });
 });
 
+app.get("/refresh", async (req, res) => {
+    await checkForUpdates();
+    res.send("ok");
+});
+
 const statSources = [
     twitter,
     time,
@@ -59,6 +66,7 @@ const statSources = [
  * @param {Source} source
  */
 async function latestStats(source: Source) {
+    const db = await getDb();
     const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).limit(1).toArray();
     return results[0];
 }

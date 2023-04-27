@@ -1,13 +1,12 @@
 import {config} from "dotenv";
 import {auth, gmail} from "@googleapis/gmail";
 import {Source, StatSource} from "../StatSource.js";
-import {oauth} from "../db.js";
+import {getOauthDb} from "../db.js";
 
 config();
 
 const {OAuth2} = auth;
 const callbackUri = `${process.env.API_BASE}/callback/gmail`;
-const gmailOauthDb = oauth.collection("gmail");
 
 const oauth2Client = new OAuth2(
     process.env.GMAIL_CLIENT_ID as string,
@@ -26,6 +25,8 @@ type GmailStats = {
  * @return {Promise<Credentials>} The credentials
  */
 async function getCredentials() {
+    const gmailOauthDb = (await getOauthDb()).collection("gmail");
+
     const doc = await gmailOauthDb.findOne({credentials: true});
     if (!doc || !doc.auth) {
         throw new Error("No credentials found!");
@@ -38,6 +39,7 @@ async function getCredentials() {
  * @param {Credentials} credentials The credentials
  */
 async function saveCredentials(credentials:any) {
+    const gmailOauthDb = (await getOauthDb()).collection("gmail");
     await gmailOauthDb.deleteMany({credentials: true});
     const saved = await gmailOauthDb.insertOne({credentials: true, auth: credentials});
     console.log(`Saved credentials: ${saved.insertedId}`);
