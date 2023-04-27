@@ -6,7 +6,6 @@ let _client:MongoClient|null = null;
 
 export const getClient = async () => {
     const uri = process.env.MONGODB_URI as string;
-    console.log(`uri: ${uri}`);
     if (_client) return _client;
     _client = new MongoClient(uri, {
         serverApi: {

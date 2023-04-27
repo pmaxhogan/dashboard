@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 
 import prodConfig from "./prodConfig.js";
+
 prodConfig();
 
 import twitter from "./sources/twitter.js";
@@ -10,7 +11,7 @@ import gmail from "./sources/gmail.js";
 
 import express from "express";
 import cors from "cors";
-import {Source, StatSource} from "./StatSource.js";
+import {deleteAll, Source, StatSource} from "./StatSource.js";
 import {getDb} from "./db.js";
 
 const app = express();
@@ -27,8 +28,14 @@ app.get("/sources", async (req, res) => {
     res.send({sources});
 });
 
+app.delete("/stats/:source", async (req, res) => {
+    await deleteAll(req.params.source);
+});
+
 app.get("/stats/:source", async (req, res) => {
     const db = await getDb();
+    const aggregate = req.query.aggregate === "true";
+    const buckets = aggregate ? parseInt(req.query.buckets as string) || 200 : 0;
 
     const source = req.params.source;
 
@@ -37,10 +44,55 @@ app.get("/stats/:source", async (req, res) => {
         return;
     }
 
-    const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).toArray();
+    let results:any;
+    if (aggregate) {
+        const latest = await latestStats(source);
+
+        const outputObject = {} as any;
+        for (const [key, value] of Object.entries(latest.stats.stats)) {
+            if (!value) continue;
+            for (const [subKey, _] of Object.entries(value)) {
+                outputObject[`${key}:${subKey}`] = {"$avg": `$stats.stats.${key}.${subKey}`};
+            }
+        }
+
+        const pipeline = [
+            {
+                $sort: {
+                    timestamp: 1
+                }
+            },
+            {
+                $bucketAuto: {
+                    groupBy: "$timestamp",
+                    buckets: buckets,
+                    output: outputObject
+                }
+            }
+        ];
+
+        const aggregateResult = await db.collection(source.toLowerCase()).aggregate(pipeline).toArray();
+
+        results = aggregateResult.map((result) => {
+            const stats = {} as any;
+            for (const [key, value] of Object.entries(result)) {
+                if (key === "_id") continue;
+
+                const [sourceKey, subKey] = key.split(":");
+                if (!stats[sourceKey]) stats[sourceKey] = {};
+                stats[sourceKey][subKey] = value;
+            }
+            return {stats: {stats}, timestamp: result._id.min};
+        });
+    } else {
+        results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).toArray();
+    }
+
+    // const
     res.send({
-        stats: results.map((result) => ({stats: result.stats.stats, timestamp: result.timestamp})),
+        stats: results.map((result:any) => ({stats: result.stats.stats, timestamp: result.timestamp})),
         series: results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
+            if (key === "_id") return acc;
             acc[key] = Object.keys(results[0].stats.stats[key]);
             return acc;
         }, {} as { [key: string]: string[] }) : {}
@@ -61,9 +113,9 @@ const statSources = [
 
 /**
  * Get the latest stats for a source
- * @param {Source} source
+ * @param {string} source
  */
-async function latestStats(source: Source) {
+async function latestStats(source: string) {
     const db = await getDb();
     const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).limit(1).toArray();
     return results[0];
@@ -103,12 +155,12 @@ for (const statSource of statSources) {
 async function checkForUpdates() {
     for (const statSource of statSources) {
         let timeUntilNext = await checkAndRefresh(statSource);
-        console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
+        console.log(`${statSource.source}: Next update in ${timeUntilNext / 1000} seconds`);
         setTimeout(async () => {
             // noinspection InfiniteLoopJS
             while (true) { // eslint-disable-line no-constant-condition
                 timeUntilNext = await checkAndRefresh(statSource);
-                console.log(`Next update for ${statSource.source} in ${timeUntilNext / 1000} seconds`);
+                console.log(`${statSource.source}: Next update in ${timeUntilNext / 1000} seconds`);
                 await sleep(timeUntilNext);
             }
         }, timeUntilNext);

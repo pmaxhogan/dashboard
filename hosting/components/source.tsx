@@ -3,10 +3,10 @@ import React, {useEffect, useState} from "react";
 import dynamic from "next/dynamic";
 const ApexCharts = dynamic(() => import('react-apexcharts'), { ssr: false }) as any;
 
-const MINUTE_MS = 1000 * 10;
+const MINUTE_MS = 1000 * 10 * 10000;
 
 
-export default function Source({source}) {
+export default function Source({source, aggregate} : {source: string, aggregate?: number}) {
     const [subchartNames, setSubchartNames] = useState([]);
     const [chartNameToSeries, setChartNameToSeries] = useState({});
 
@@ -15,10 +15,9 @@ export default function Source({source}) {
         const {
             series: subCharts,
             stats: datapoints
-        } = await fetch(`${apiBase}/stats/${source}`).then(response => response.json());
+        } = await fetch(`${apiBase}/stats/${source}` + (aggregate ? `?aggregate=true&buckets=${aggregate}` : "")).then(response => response.json());
         const subchartNames = Object.keys(subCharts);
         setSubchartNames(subchartNames);
-        console.log("subCharts", subCharts, datapoints);
         setChartNameToSeries(subchartNames.reduce((acc, name) => {
             acc[name] = subCharts[name].map(series => ({name: titleCase(series), data: datapoints.map(point => [point.timestamp, point.stats[name][series]])}))
             return acc;
@@ -30,7 +29,7 @@ export default function Source({source}) {
         const interval = setInterval(fetchData, MINUTE_MS);
 
         return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
-    }, []);
+    }, [aggregate]);
 
 
     const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());

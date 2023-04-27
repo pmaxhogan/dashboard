@@ -7,11 +7,11 @@ prodConfig();
 // use homepage
 // db.createCollection("X", {timeseries: {timeField: "timestamp", metaField: "metadata", granularity: "seconds"}})
 
-const deleteAll = async (colName: string) => {
+export const deleteAll = async (colName: string) => {
     const db = await getDb();
     const collection = db.collection(colName);
     const result = await collection.deleteMany({});
-    console.log(`Deleted ${result.deletedCount} documents`);
+    console.log(`${colName}: Deleted ${result.deletedCount} documents`);
 };
 
 const deleteAllOnStart = process.env.DELETE_ALL_ON_START === "true";

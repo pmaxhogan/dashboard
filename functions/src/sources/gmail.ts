@@ -41,8 +41,7 @@ async function getCredentials() {
 async function saveCredentials(credentials:any) {
     const gmailOauthDb = (await getOauthDb()).collection("gmail");
     await gmailOauthDb.deleteMany({credentials: true});
-    const saved = await gmailOauthDb.insertOne({credentials: true, auth: credentials});
-    console.log(`Saved credentials: ${saved.insertedId}`);
+    await gmailOauthDb.insertOne({credentials: true, auth: credentials});
 }
 
 export default new StatSource(1000 * 60 * 5, Source.GMAIL,

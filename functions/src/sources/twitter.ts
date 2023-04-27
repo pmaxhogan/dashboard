@@ -86,7 +86,6 @@ export default new StatSource(1000 * 60 * 60, Source.TWITTER,
         let data:UserV2;
 
         const real = process.env.REAL_TWITTER === "true";
-        console.log("real", real);
         if (real) {
             data = (await client.v2.me({
                 "user.fields": ["description", "id", "location", "name", "profile_image_url", "public_metrics", "username"]
