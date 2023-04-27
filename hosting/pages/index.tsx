@@ -9,7 +9,7 @@ const DEFAULT_AGGREGATE = 100;
 
 export default function IndexPage() {
     const {data: sourcesData, error: sourcesError} = useSWR(`${apiBase}/sources`, fetcher);
-    const [aggregate, setAggregate] = React.useState<number|null>(null);
+    const [aggregate, setAggregate] = React.useState<number|null>(DEFAULT_AGGREGATE);
     if (sourcesError || !sourcesData) return null;
     const sources = sourcesData.sources;
 
