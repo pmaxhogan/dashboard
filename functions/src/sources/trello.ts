@@ -1,5 +1,6 @@
 import prodConfig from "../prodConfig.js";
 prodConfig();
+import fetch from "node-fetch";
 
 import {Source, StatSource} from "../StatSource.js";
 
@@ -37,6 +38,11 @@ interface TrelloCard {
     id: string;
     labels: Label[];
     customFieldItems: CustomFieldItem[];
+}
+
+interface TrelloList {
+    id: string;
+    name: string;
 }
 
 type CustomFieldOptions = {
@@ -86,7 +92,7 @@ async function getValuesForField(fieldId: string) {
 async function getNameOfList(listId: string) {
     const url = `https://api.trello.com/1/lists/${listId}?key=${key}&token=${token}&fields=name`;
     const response = await fetch(url);
-    const list = await response.json();
+    const list = await response.json() as TrelloList;
     return list.name as string;
 }
 

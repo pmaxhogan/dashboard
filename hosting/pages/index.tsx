@@ -10,8 +10,13 @@ export default function IndexPage() {
     if (sourcesError || !sourcesData) return null;
     const sources = sourcesData.sources;
 
+    function refresh() {
+        window.open(`${apiBase}/refresh`, "_blank");
+    }
+
     return (
         <>
+            <button onClick={refresh}>Update Stats</button>
             {sources.map((source) => (<SourceButton key={source} source={source}/>))}
             <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(500px, 1fr))"}}>
                 {sources.map((source) => (<Source key={source} source={source}/>))}
