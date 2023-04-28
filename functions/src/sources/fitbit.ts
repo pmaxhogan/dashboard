@@ -97,7 +97,7 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
  * @param {any} opts
  * @param {boolean} dontRefresh
  */
-async function fetchRefreshIfNeeded(url: string, opts: any, dontRefresh = false): Promise<Response | undefined> {
+async function fetchRefreshIfNeeded(url: string, opts: any, dontRefresh = false): Promise<any> {
     const req = await fetch(url, opts);
     if (req.status === 401 && !dontRefresh) {
         await refresh();
@@ -122,7 +122,7 @@ async function refresh() {
             refresh_token: (await getLoginCredentials()).refreshToken
         }).toString()
     });
-    const json = await req.json();
+    const json = await req.json() as { access_token: string, refresh_token: string };
     await setLoginCredentials(json.access_token, json.refresh_token);
 }
 
@@ -229,7 +229,7 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
             })
         });
         // eslint-disable-next-line camelcase
-        const {access_token, refresh_token, expires_in, user_id} = await tokenReq.json();
+        const {access_token, refresh_token, expires_in, user_id} = await tokenReq.json() as { access_token: string, refresh_token: string, expires_in: string, user_id: string };
         console.log("access_token", access_token, refresh_token, expires_in, user_id);
 
         await setLoginCredentials(access_token, refresh_token);
