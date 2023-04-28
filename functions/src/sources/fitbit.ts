@@ -29,12 +29,6 @@ type ActiveMinutesValues = {
     peak: number;
 }
 
-/* type Spo2Values = {
-    avg: number;
-    min: number;
-    max: number;
-}*/
-
 type FitbitStats = {
     sleepBreathing: SleepBreathingValues;
     vo2Max: {
@@ -48,7 +42,6 @@ type FitbitStats = {
     };
     activeMinutes: ActiveMinutesValues;
     hrvValues: HrvValues;
-    // spo2Values: Spo2Values;
 }
 
 const callbackUri = `${process.env.API_BASE}/callback/fitbit`;
@@ -139,10 +132,8 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
                 Authorization: `Bearer ${accessToken}`
             }
         };
-        // const profile = await (await fetchRefreshIfNeeded("https://api.fitbit.com/1/user/-/profile.json", authHeader))?.json();
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        // date str yyyy-MM-dd
         const yesterdayStr = yesterday.toISOString().split("T")[0];
 
         const breathing = await (await fetchRefreshIfNeeded(`https://api.fitbit.com/1/user/-/br/date/${yesterdayStr}/all.json`, authHeader))?.json();
@@ -151,7 +142,6 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
         const skinTemp = await (await fetchRefreshIfNeeded(`https://api.fitbit.com/1/user/-/temp/skin/date/${yesterdayStr}.json`, authHeader))?.json();
         const heart = await (await fetchRefreshIfNeeded(`https://api.fitbit.com/1/user/-/activities/heart/date/${yesterdayStr}/1d.json`, authHeader))?.json();
 
-        // const spo2 = await (await fetchRefreshIfNeeded(`https://api.fitbit.com/1/user/-/spo2/date/${yesterdayStr}.json`, authHeader))?.json();
 
         const breathingValues = breathing.br[0].value;
         const {dailyRmssd, deepRmssd} = hrv.hrv[0].value;
@@ -179,8 +169,6 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
         };
 
 
-        // const spo2Values = spo2.value;
-
         const stats = {
             sleepBreathing,
             vo2Max: {
@@ -194,11 +182,7 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
                 rhrValue
             },
             activeMinutes
-            // spo2Values
         } as FitbitStats;
-
-
-        console.log("fitbit profile", JSON.stringify(breathing.br));
 
         return {
             stats
