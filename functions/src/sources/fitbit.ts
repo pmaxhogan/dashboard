@@ -2,6 +2,7 @@ import prodConfig from "../prodConfig.js";
 import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import crypto from "node:crypto";
+import fetch from "node-fetch";
 
 prodConfig();
 
