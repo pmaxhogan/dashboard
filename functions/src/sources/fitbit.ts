@@ -106,6 +106,9 @@ async function fetchRefreshIfNeeded(url: string, opts: any, dontRefresh = false)
 }
 
 
+/**
+ * Refresh the access token
+ */
 async function refresh() {
     const req = await fetch("https://api.fitbit.com/oauth2/token", {
         method: "POST",
