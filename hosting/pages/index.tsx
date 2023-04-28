@@ -5,7 +5,7 @@ import Source from "../components/source";
 import SourceButton from "../components/sourcebutton";
 
 
-const DEFAULT_AGGREGATE = 100;
+const DEFAULT_AGGREGATE = 300;
 
 export default function IndexPage() {
     const {data: sourcesData, error: sourcesError} = useSWR(`${apiBase}/sources`, fetcher);

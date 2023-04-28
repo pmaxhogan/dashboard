@@ -19,7 +19,10 @@ export default function Source({source, aggregate} : {source: string, aggregate?
         const subchartNames = Object.keys(subCharts);
         setSubchartNames(subchartNames);
         setChartNameToSeries(subchartNames.reduce((acc, name) => {
-            acc[name] = subCharts[name].map(series => ({name: titleCase(series), data: datapoints.map(point => [point.timestamp, point.stats[name][series]])}))
+            acc[name] = subCharts[name].map(series => ({
+                name: titleCase(series),
+                data: datapoints.map(point => [point.timestamp, point.stats[name][series]])
+            }))
             return acc;
         }, {}));
     }
