@@ -9,9 +9,11 @@ const MINUTE_MS = 1000 * 10 * 10000;
 export default function Source({source, aggregate} : {source: string, aggregate?: number}) {
     const [subchartNames, setSubchartNames] = useState([]);
     const [chartNameToSeries, setChartNameToSeries] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
 
 
     async function fetchData() {
+        setIsLoading(true);
         const {
             series: subCharts,
             stats: datapoints
@@ -25,6 +27,7 @@ export default function Source({source, aggregate} : {source: string, aggregate?
             }))
             return acc;
         }, {}));
+        setIsLoading(false);
     }
 
     useEffect(() => {
@@ -111,7 +114,9 @@ export default function Source({source, aggregate} : {source: string, aggregate?
     }
 
     return <>
-        {charts}
+        {isLoading ? <div>{source}
+            <progress style={{width: "100%"}}/>
+        </div> : charts}
     </>;
 }
 
