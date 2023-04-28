@@ -8,6 +8,7 @@ import twitter from "./sources/twitter.js";
 import time from "./sources/timeSource.js";
 import trello from "./sources/trello.js";
 import gmail from "./sources/gmail.js";
+import fitbit from "./sources/fitbit.js";
 
 import express from "express";
 import cors from "cors";
@@ -47,6 +48,10 @@ app.get("/stats/:source", async (req, res) => {
     let results:any;
     if (aggregate) {
         const latest = await latestStats(source);
+
+        if (!latest) {
+            res.send({stats: [], series: []});
+        }
 
         const outputObject = {} as any;
         for (const [key, value] of Object.entries(latest.stats.stats)) {
@@ -108,7 +113,8 @@ const statSources = [
     twitter,
     time,
     trello,
-    gmail
+    gmail,
+    fitbit
 ];
 
 /**

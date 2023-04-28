@@ -20,7 +20,8 @@ export enum Source {
     TWITTER = "twitter",
     TIME = "time",
     TRELLO = "trello",
-    GMAIL = "gmail"
+    GMAIL = "gmail",
+    FITBIT = "fitbit"
 }
 
 type RefreshFunction = () => Promise<RefreshData>;
