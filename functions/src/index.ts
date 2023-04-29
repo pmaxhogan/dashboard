@@ -39,6 +39,7 @@ app.get("/stats/:source", async (req, res) => {
     const buckets = aggregate ? parseInt(req.query.buckets as string) || 200 : 0;
 
     const source = req.params.source;
+    console.log("GET /stats/:source", source);
 
     if (!sources.includes(source)) {
         res.status(400).send({error: "Invalid source"});
@@ -62,11 +63,6 @@ app.get("/stats/:source", async (req, res) => {
         }
 
         const pipeline = [
-            {
-                $sort: {
-                    timestamp: 1
-                }
-            },
             {
                 $bucketAuto: {
                     groupBy: "$timestamp",
@@ -159,6 +155,9 @@ for (const statSource of statSources) {
 }
 
 async function checkForUpdates() {
+    if (1) {
+        throw new Error("Not implemented");
+    }
     for (const statSource of statSources) {
         let timeUntilNext = await checkAndRefresh(statSource);
         console.log(`${statSource.source}: Next update in ${timeUntilNext / 1000} seconds`);
