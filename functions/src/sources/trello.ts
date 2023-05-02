@@ -1,6 +1,7 @@
 import prodConfig from "../prodConfig.js";
 prodConfig();
 import fetch from "node-fetch";
+import {debug} from "firebase-functions/logger";
 
 import {Source, StatSource} from "../StatSource.js";
 
@@ -103,6 +104,11 @@ export default new StatSource(1000 * 60 * 5, Source.TRELLO,
             listIdToName.set(list, await getNameOfList(list));
         }
 
+        debug("Trello built listIdToName", {
+            numLists: listIdToName.size,
+            location: "trello.refresh"
+        });
+
         const fieldIdToTimeMinutes = new Map<string, number>();
         const values = await getValuesForField(fieldId);
         for (const value of values) {
@@ -114,6 +120,11 @@ export default new StatSource(1000 * 60 * 5, Source.TRELLO,
             fieldIdToTimeMinutes.set(value._id, time);
         }
 
+        debug("Trello built fieldIdToTimeMinutes", {
+            numFields: fieldIdToTimeMinutes.size,
+            location: "trello.refresh"
+        });
+
         const listToCards = new Map<string, TrelloCard[]>();
         const proms = [];
         for (const list of progressLists) {
@@ -121,11 +132,21 @@ export default new StatSource(1000 * 60 * 5, Source.TRELLO,
         }
         await Promise.all(proms);
 
+        debug("Trello built listToCards", {
+            numLists: listToCards.size,
+            location: "trello.refresh"
+        });
+
 
         const numCardsByList = {} as { [key: string]: number };
         for (const [listId, cards] of listToCards) {
             numCardsByList[listIdToName.get(listId) as string] = cards.length;
         }
+
+        debug("Trello built numCardsByList", {
+            numLists: Object.keys(numCardsByList).length,
+            location: "trello.refresh"
+        });
 
         const numCardsByLabel = {} as { [key: string]: number };
         const totalTimeInList = {} as { [key: string]: number };
@@ -165,6 +186,11 @@ export default new StatSource(1000 * 60 * 5, Source.TRELLO,
             }
         }
 
+        debug("Trello built numCardsByLabel", {
+            numLabels: Object.keys(numCardsByLabel).length,
+            location: "trello.refresh"
+        });
+
         const stats = {
             num_cards_by_list: numCardsByList,
             num_cards_by_label: numCardsByLabel,
@@ -172,14 +198,19 @@ export default new StatSource(1000 * 60 * 5, Source.TRELLO,
             total_time_in_label: totalTimeInLabel
         } as TrelloStats;
 
+        debug("Trello built stats", {
+            location: "trello.refresh",
+            stats
+        });
+
         return {
             stats
         };
     },
     async (req, res) => {
-        res.send("ok");
+        res.status(204).end();
     },
     async (req, res) => {
-        res.send("ok");
+        res.status(204).end();
     }
 );

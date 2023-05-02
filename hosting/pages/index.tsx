@@ -14,8 +14,8 @@ export default function IndexPage() {
     if (sourcesError || !sourcesData) return null;
     const sources = sourcesData.sources;
 
-    function refresh() {
-        window.open(`${apiBase}/refresh`, "_blank");
+    async function refresh() {
+        await fetch(`${apiBase}/refresh`, {method: "POST"});
     }
 
     return (

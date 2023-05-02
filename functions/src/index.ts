@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions";
+import {error, warn, info, debug} from "firebase-functions/logger";
 
 import prodConfig from "./prodConfig.js";
 
@@ -21,15 +22,21 @@ const sources = Object.keys(Source);
 
 app.use(cors({origin: process.env.CORS_ORIGIN}));
 
-app.get("/", async (req, res) => {
-    res.send("/");
-});
 
 app.get("/sources", async (req, res) => {
     res.send({sources});
+    debug("Getting sources", {
+        route: "/sources",
+        location: "route",
+        sources
+    });
 });
 
 app.delete("/stats/:source", async (req, res) => {
+    warn(`Deleting all stats for ${req.params.source}`, {
+        route: "/stats/:source",
+        location: "route",
+    });
     await deleteAll(req.params.source);
 });
 
@@ -39,9 +46,16 @@ app.get("/stats/:source", async (req, res) => {
     const buckets = aggregate ? parseInt(req.query.buckets as string) || 200 : 0;
 
     const source = req.params.source;
-    console.log("GET /stats/:source", source);
+    debug(`Getting stats for ${source} (aggregate: ${aggregate}, buckets: ${buckets})`, {
+        route: "/stats/:source",
+        location: "route",
+        source,
+        aggregate,
+        buckets
+    });
 
     if (!sources.includes(source)) {
+        warn(`Invalid source: ${source}`);
         res.status(400).send({error: "Invalid source"});
         return;
     }
@@ -51,7 +65,13 @@ app.get("/stats/:source", async (req, res) => {
         const latest = await latestStats(source);
 
         if (!latest) {
+            error(`No results found for ${source}`, {
+                route: "/stats/:source",
+                location: "route",
+                source
+            });
             res.send({stats: [], series: []});
+            return;
         }
 
         const outputObject = {} as any;
@@ -73,6 +93,11 @@ app.get("/stats/:source", async (req, res) => {
         ];
 
         const aggregateResult = await db.collection(source.toLowerCase()).aggregate(pipeline).toArray();
+        debug(`aggregateResult returned Got ${aggregateResult.length} results`, {
+            route: "/stats/:source",
+            location: "route",
+            results: aggregateResult.length
+        });
 
         results = aggregateResult.map((result) => {
             const stats = {} as any;
@@ -87,21 +112,40 @@ app.get("/stats/:source", async (req, res) => {
         });
     } else {
         results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).toArray();
+        debug(`Got ${results.length} results`, {
+            route: "/stats/:source",
+            location: "route",
+            results: results.length
+        });
     }
 
-    // const
+    const stats = results.map((result:any) => ({stats: result.stats.stats, timestamp: result.timestamp}));
+
+    const series = results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
+        if (key === "_id") return acc;
+        acc[key] = Object.keys(results[0].stats.stats[key]);
+        return acc;
+    }, {} as { [key: string]: string[] }) : {};
+
+    debug(`Returning ${stats.length} stats`, {
+        route: "/stats/:source",
+        location: "route",
+        stats: stats.length,
+        series
+    });
+
     res.send({
-        stats: results.map((result:any) => ({stats: result.stats.stats, timestamp: result.timestamp})),
-        series: results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
-            if (key === "_id") return acc;
-            acc[key] = Object.keys(results[0].stats.stats[key]);
-            return acc;
-        }, {} as { [key: string]: string[] }) : {}
+        stats,
+        series
     });
 });
 
-app.get("/refresh", async (req, res) => {
+app.post("/refresh", async (req, res) => {
     await checkForUpdates();
+    info("Refreshed all sources", {
+        route: "/refresh",
+        location: "route"
+    });
     res.send("ok");
 });
 
@@ -120,7 +164,19 @@ const statSources = [
 async function latestStats(source: string) {
     const db = await getDb();
     const results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).limit(1).toArray();
-    return results[0];
+    if (!results || !results.length) {
+        error(`No results found for ${source}`, {
+            location: "latestStats",
+            source
+        });
+        return null;
+    }
+    debug(`Got latest stats for ${source}`, {
+        location: "latestStats",
+        source,
+        results: results && results[0]
+    });
+    return results && results[0];
 }
 
 /**
@@ -137,9 +193,26 @@ async function checkAndRefresh(statSource: StatSource) {
     const elapsedTimeSinceLastUpdate = now.getTime() - latestTimestamp;
     const refreshTime = statSource.refreshFrequency;
     const doRefresh = elapsedTimeSinceLastUpdate + variance > refreshTime;
-    console.log(`Source ${statSource.source} updated ${elapsedTimeSinceLastUpdate / 1000}/${refreshTime / 1000} seconds ago (${doRefresh ? "refreshing" : "not refreshing"})`);
+
+    debug(`Source ${statSource.source} updated ${elapsedTimeSinceLastUpdate / 1000}/${refreshTime / 1000} seconds ago (${doRefresh ? "refreshing" : "not refreshing"})`, {
+        location: "checkAndRefresh",
+        source: statSource.source,
+        elapsedTimeSinceLastUpdate,
+        refreshTime,
+        doRefresh,
+        now
+    });
+
     if (doRefresh) {
-        await statSource.refreshStats();
+        try {
+            await statSource.refreshStats();
+        } catch (e) {
+            error(`Error refreshing ${statSource.source}: ${e}`, {
+                location: "checkAndRefresh",
+                source: statSource.source,
+                error: e
+            });
+        }
         return refreshTime;
     } else {
         return refreshTime - elapsedTimeSinceLastUpdate;
@@ -155,19 +228,32 @@ for (const statSource of statSources) {
 }
 
 async function checkForUpdates() {
+    debug("Checking for updates", {
+        location: "checkForUpdates"
+    });
     if (process.env.SKIP_UPDATES === "true") {
-        console.log("Skipping updates");
+        info("Skipping updates", {
+            location: "checkForUpdates"
+        });
         return;
     }
 
     for (const statSource of statSources) {
         let timeUntilNext = await checkAndRefresh(statSource);
-        console.log(`${statSource.source}: Next update in ${timeUntilNext / 1000} seconds`);
+        debug(`Source ${statSource.source} next update in ${timeUntilNext / 1000} seconds`, {
+            location: "checkForUpdates",
+            source: statSource.source,
+            timeUntilNext
+        });
         setTimeout(async () => {
             // noinspection InfiniteLoopJS
             while (true) { // eslint-disable-line no-constant-condition
                 timeUntilNext = await checkAndRefresh(statSource);
-                console.log(`${statSource.source}: Next update in ${timeUntilNext / 1000} seconds`);
+                debug(`Source ${statSource.source} next update in ${timeUntilNext / 1000} seconds`, {
+                    location: "checkForUpdates",
+                    source: statSource.source,
+                    timeUntilNext
+                });
                 await sleep(timeUntilNext);
             }
         }, timeUntilNext);
