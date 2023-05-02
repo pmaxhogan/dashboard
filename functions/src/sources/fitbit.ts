@@ -3,7 +3,7 @@ import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import crypto from "node:crypto";
 import fetch from "node-fetch";
-import {error, warn, debug} from "firebase-functions/logger";
+import {debug, error, warn} from "firebase-functions/logger";
 
 prodConfig();
 
@@ -259,7 +259,7 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
         await addState(state);
 
         const url = `https://www.fitbit.com/oauth2/authorize?client_id=${process.env.FITBIT_CLIENT_ID}&response` +
-        `_type=code&scope=${encodeURIComponent(scope)}&state=${state}&redirect_uri=${callbackUri}`;
+            `_type=code&scope=${encodeURIComponent(scope)}&state=${state}&redirect_uri=${callbackUri}`;
 
         debug("redirecting to fitbit", {
             location: "fitbit.redirect",
@@ -300,7 +300,12 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
             })
         });
         // eslint-disable-next-line camelcase
-        const {access_token, refresh_token, expires_in, user_id} = await tokenReq.json() as { access_token: string, refresh_token: string, expires_in: string, user_id: string };
+        const {access_token, refresh_token, expires_in, user_id} = await tokenReq.json() as {
+            access_token: string,
+            refresh_token: string,
+            expires_in: string,
+            user_id: string
+        };
         console.log("access_token", access_token, refresh_token, expires_in, user_id);
 
         debug("fitbit callback token", {

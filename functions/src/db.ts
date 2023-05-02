@@ -1,8 +1,8 @@
 import {Db, MongoClient, ServerApiVersion} from "mongodb";
 
 
-let _db:Db|null = null;
-let _client:MongoClient|null = null;
+let _db: Db | null = null;
+let _client: MongoClient | null = null;
 
 export const getClient = async () => {
     const uri = process.env.MONGODB_URI as string;

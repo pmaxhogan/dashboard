@@ -1,11 +1,11 @@
 import prodConfig from "../prodConfig.js";
-prodConfig();
-
 import {auth, gmail} from "@googleapis/gmail";
 import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import type {OAuth2Client} from "google-auth-library";
-import {error, debug} from "firebase-functions/logger";
+import {debug, error} from "firebase-functions/logger";
+
+prodConfig();
 
 const {OAuth2} = auth;
 const callbackUri = `${process.env.API_BASE}/callback/gmail`;
@@ -58,7 +58,7 @@ async function getCredentials() {
  * Set the login credentials
  * @param {Credentials} credentials The credentials
  */
-async function saveCredentials(credentials:any) {
+async function saveCredentials(credentials: any) {
     const gmailOauthDb = (await getOauthDb()).collection("gmail");
     const deleteReq = await gmailOauthDb.deleteMany({credentials: true});
     await gmailOauthDb.insertOne({credentials: true, auth: credentials});

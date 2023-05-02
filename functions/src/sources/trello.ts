@@ -1,9 +1,10 @@
 import prodConfig from "../prodConfig.js";
-prodConfig();
 import fetch from "node-fetch";
 import {debug} from "firebase-functions/logger";
 
 import {Source, StatSource} from "../StatSource.js";
+
+prodConfig();
 
 type TrelloStats = {
     num_cards_by_list: {

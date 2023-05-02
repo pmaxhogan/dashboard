@@ -4,7 +4,7 @@ import {TwitterApi} from "twitter-api-v2";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
 import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
 import {getOauthDb} from "../db.js";
-import {error, debug} from "firebase-functions/logger";
+import {debug, error} from "firebase-functions/logger";
 
 prodConfig();
 
@@ -110,7 +110,7 @@ export default new StatSource(1000 * 60 * 60, Source.TWITTER,
 
         const client = new TwitterApi(accessToken, {plugins: [autoRefresherPlugin]});
 
-        let data:UserV2;
+        let data: UserV2;
 
         const real = process.env.REAL_TWITTER === "true";
 
@@ -154,7 +154,11 @@ export default new StatSource(1000 * 60 * 60, Source.TWITTER,
         };
     },
     async (req, res) => {
-        const {url, codeVerifier, state} = loginClient.generateOAuth2AuthLink(callbackUri, {scope: ["tweet.read", "users.read", "offline.access"]});
+        const {
+            url,
+            codeVerifier,
+            state
+        } = loginClient.generateOAuth2AuthLink(callbackUri, {scope: ["tweet.read", "users.read", "offline.access"]});
 
         await setLoginVerifierForState(state, codeVerifier);
 

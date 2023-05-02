@@ -1,10 +1,7 @@
 import * as functions from "firebase-functions";
-import {error, warn, info, debug} from "firebase-functions/logger";
+import {debug, error, info, warn} from "firebase-functions/logger";
 
 import prodConfig from "./prodConfig.js";
-
-prodConfig();
-
 import twitter from "./sources/twitter.js";
 import time from "./sources/timeSource.js";
 import trello from "./sources/trello.js";
@@ -15,6 +12,8 @@ import express from "express";
 import cors from "cors";
 import {deleteAll, Source, StatSource} from "./StatSource.js";
 import {getDb} from "./db.js";
+
+prodConfig();
 
 const app = express();
 
@@ -60,7 +59,7 @@ app.get("/stats/:source", async (req, res) => {
         return;
     }
 
-    let results:any;
+    let results: any;
     if (aggregate) {
         const latest = await latestStats(source);
 
@@ -119,7 +118,7 @@ app.get("/stats/:source", async (req, res) => {
         });
     }
 
-    const stats = results.map((result:any) => ({stats: result.stats.stats, timestamp: result.timestamp}));
+    const stats = results.map((result: any) => ({stats: result.stats.stats, timestamp: result.timestamp}));
 
     const series = results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
         if (key === "_id") return acc;

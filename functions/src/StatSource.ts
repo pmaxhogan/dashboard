@@ -1,6 +1,6 @@
 import {getDb} from "./db.js";
 import prodConfig from "./prodConfig.js";
-import {error, warn, info, debug} from "firebase-functions/logger";
+import {debug, error, info, warn} from "firebase-functions/logger";
 
 /*
 example
@@ -23,6 +23,7 @@ export const deleteAll = async (colName: string) => {
     const result = await collection.deleteMany({});
     console.log(`${colName}: Deleted ${result.deletedCount} documents`);
 };
+
 export enum Source {
     TWITTER = "twitter",
     TIME = "time",
