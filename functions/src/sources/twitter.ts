@@ -93,7 +93,7 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
     });
 }
 
-export default new StatSource(1000 * 60 * 60, Source.TWITTER,
+export default new StatSource(1000 * 60 * 60 * 6, Source.TWITTER,
     async () => {
         const {accessToken, refreshToken} = await getLoginCredentials();
 
