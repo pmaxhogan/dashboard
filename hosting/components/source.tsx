@@ -94,9 +94,10 @@ export default function Source({source, aggregate} : {source: string, aggregate?
             xaxis: {
                 type: "datetime",
                 labels: {
-                    formatter: function (value, timestamp) {
+                    /*formatter: function (value, timestamp) {
                         return (new Date(timestamp)).toLocaleTimeString() // The formatter function overrides format property
-                    },
+                    },*/
+                    format: "MM/dd"
                 }
                 // tickAmount: 6
             },
@@ -105,6 +106,11 @@ export default function Source({source, aggregate} : {source: string, aggregate?
                 y: {
                     formatter: function (val) {
                         return val.toFixed(0)
+                    }
+                },
+                x: {
+                    formatter: function (val) {
+                        return (new Date(val)).toLocaleTimeString()
                     }
                 }
             }

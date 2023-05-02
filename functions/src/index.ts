@@ -155,9 +155,11 @@ for (const statSource of statSources) {
 }
 
 async function checkForUpdates() {
-    if (1) {
-        throw new Error("Not implemented");
+    if (process.env.SKIP_UPDATES === "true") {
+        console.log("Skipping updates");
+        return;
     }
+
     for (const statSource of statSources) {
         let timeUntilNext = await checkAndRefresh(statSource);
         console.log(`${statSource.source}: Next update in ${timeUntilNext / 1000} seconds`);

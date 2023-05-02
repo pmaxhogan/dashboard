@@ -24,7 +24,6 @@ type HrvValues = {
 }
 
 type ActiveMinutesValues = {
-    belowZone: number;
     fatBurn: number;
     cardio: number;
     peak: number;
@@ -166,7 +165,6 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
         const rhrValue = heart["activities-heart"][0].value.restingHeartRate;
         const zones = heart["activities-heart"][0].value.heartRateZones;
         const activeMinutes = {
-            belowZone: zones.find((zone: any) => zone.name === "Out of Range").minutes,
             fatBurn: zones.find((zone: any) => zone.name === "Fat Burn").minutes,
             cardio: zones.find((zone: any) => zone.name === "Cardio").minutes,
             peak: zones.find((zone: any) => zone.name === "Peak").minutes,

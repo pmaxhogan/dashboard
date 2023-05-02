@@ -4,15 +4,23 @@ prodConfig();
 import {auth, gmail} from "@googleapis/gmail";
 import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
+import type {OAuth2Client} from "google-auth-library";
 
 const {OAuth2} = auth;
 const callbackUri = `${process.env.API_BASE}/callback/gmail`;
 
-const oauth2Client = new OAuth2(
-    process.env.GMAIL_CLIENT_ID as string,
-    process.env.GMAIL_CLIENT_SECRET as string,
-    callbackUri
-);
+let _client: OAuth2Client;
+const getOauth2Client = () => {
+    console.log(`Gmail callback URI: ${callbackUri}`);
+    if (!_client) {
+        _client = new OAuth2(
+            process.env.GMAIL_CLIENT_ID as string,
+            process.env.GMAIL_CLIENT_SECRET as string,
+            callbackUri
+        );
+    }
+    return _client;
+};
 
 const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
 
@@ -50,9 +58,9 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
             num_unread: 0
         } as GmailStats;
 
-        oauth2Client.setCredentials(await getCredentials());
+        getOauth2Client().setCredentials(await getCredentials());
 
-        const gmailClient = gmail({version: "v1", auth: oauth2Client});
+        const gmailClient = gmail({version: "v1", auth: getOauth2Client()});
         const inboxLabel = await gmailClient.users.labels.get({
             userId: "me",
             id: "INBOX"
@@ -71,7 +79,7 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
         };
     },
     async (req, res) => {
-        const authUrl = oauth2Client.generateAuthUrl({
+        const authUrl = getOauth2Client().generateAuthUrl({
             access_type: "offline",
             scope: SCOPES,
         });
@@ -82,7 +90,7 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
 
         try {
             // Exchange the authorization code for access and refresh tokens
-            const {tokens} = await oauth2Client.getToken(code);
+            const {tokens} = await getOauth2Client().getToken(code);
 
             // Set the credentials on the OAuth2 client
             await saveCredentials(tokens);
