@@ -83,6 +83,11 @@ app.get("/stats/:source", async (req, res) => {
 
         const pipeline = [
             {
+                $sample: {
+                    size: 10000
+                }
+            },
+            {
                 $bucketAuto: {
                     groupBy: "$timestamp",
                     buckets: buckets,
@@ -91,6 +96,11 @@ app.get("/stats/:source", async (req, res) => {
             }
         ];
 
+        debug("Running aggregate pipeline", {
+            route: "/stats/:source",
+            location: "route",
+            pipeline
+        });
         const aggregateResult = await db.collection(source.toLowerCase()).aggregate(pipeline).toArray();
         debug(`aggregateResult returned Got ${aggregateResult.length} results`, {
             route: "/stats/:source",
