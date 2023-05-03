@@ -8,6 +8,7 @@ import trello from "./sources/trello.js";
 import gmail from "./sources/gmail.js";
 import fitbit from "./sources/fitbit.js";
 import stocks from "./sources/stocks.js";
+import strava from "./sources/strava.js";
 
 import express from "express";
 import cors from "cors";
@@ -165,7 +166,8 @@ const statSources = [
     trello,
     gmail,
     fitbit,
-    stocks
+    stocks,
+    strava
 ];
 
 /**

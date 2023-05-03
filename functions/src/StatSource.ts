@@ -31,6 +31,7 @@ export enum Source {
     GMAIL = "gmail",
     FITBIT = "fitbit",
     STOCKS = "stocks",
+    STRAVA = "strava",
 }
 
 type RefreshFunction = () => Promise<RefreshData|null>;
