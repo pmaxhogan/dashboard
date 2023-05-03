@@ -7,6 +7,7 @@ import time from "./sources/timeSource.js";
 import trello from "./sources/trello.js";
 import gmail from "./sources/gmail.js";
 import fitbit from "./sources/fitbit.js";
+import stocks from "./sources/stocks.js";
 
 import express from "express";
 import cors from "cors";
@@ -76,7 +77,7 @@ app.get("/stats/:source", async (req, res) => {
         const outputObject = {} as any;
         for (const [key, value] of Object.entries(latest.stats.stats)) {
             if (!value) continue;
-            for (const [subKey, _] of Object.entries(value)) {
+            for (const subKey of Object.keys(value)) {
                 outputObject[`${key}:${subKey}`] = {"$avg": `$stats.stats.${key}.${subKey}`};
             }
         }
@@ -163,7 +164,8 @@ const statSources = [
     time,
     trello,
     gmail,
-    fitbit
+    fitbit,
+    stocks
 ];
 
 /**
@@ -236,6 +238,9 @@ for (const statSource of statSources) {
     statSource.setupRoutes(app);
 }
 
+/**
+ * Check for updates for all stat sources
+ */
 async function checkForUpdates() {
     debug("Checking for updates", {
         location: "checkForUpdates"

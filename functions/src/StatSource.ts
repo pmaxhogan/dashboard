@@ -29,10 +29,11 @@ export enum Source {
     TIME = "time",
     TRELLO = "trello",
     GMAIL = "gmail",
-    FITBIT = "fitbit"
+    FITBIT = "fitbit",
+    STOCKS = "stocks",
 }
 
-type RefreshFunction = () => Promise<RefreshData>;
+type RefreshFunction = () => Promise<RefreshData|null>;
 
 interface RefreshData {
     stats: {
@@ -92,6 +93,14 @@ export class StatSource {
             source: this.source
         });
         const stats = await this.refresh();
+        if (stats === null) {
+            info(`Refresh: ${this.source}: Got null stats`, {
+                location: "StatSource.refreshStats",
+                source: this.source
+            });
+            return;
+        }
+
         debug(`Got stats for ${this.source}`, {
             location: "StatSource.refreshStats",
             source: this.source,
