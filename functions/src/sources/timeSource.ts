@@ -1,6 +1,7 @@
 import prodConfig from "../prodConfig.js";
 import {Source, StatSource} from "../StatSource.js";
 import {debug} from "firebase-functions/logger";
+import oauthSuccess from "../oauthSuccess.js";
 
 prodConfig();
 
@@ -28,7 +29,7 @@ export default new StatSource(1000 * 60 * 5, Source.TIME, async () => {
         }
     };
 }, async (req, res) => {
-    res.status(204).end();
+    return oauthSuccess(req, res);
 }, async (req, res) => {
-    res.status(204).end();
+    return oauthSuccess(req, res);
 });

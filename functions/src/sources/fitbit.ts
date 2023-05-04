@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import fetch from "node-fetch";
 import {debug, error, warn} from "firebase-functions/logger";
 import {DateTime} from "luxon";
+import oauthSuccess from "../oauthSuccess.js";
 
 prodConfig();
 
@@ -349,7 +350,7 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
 
         await setLoginCredentials(access_token, refresh_token);
 
-        res.status(204).end();
+        return oauthSuccess(req, res);
     }
 );
 

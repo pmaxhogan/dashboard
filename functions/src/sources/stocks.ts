@@ -2,6 +2,7 @@ import prodConfig from "../prodConfig.js";
 import {Source, StatSource} from "../StatSource.js";
 import fetch from "node-fetch";
 import {debug, info} from "firebase-functions/logger";
+import oauthSuccess from "../oauthSuccess.js";
 
 prodConfig();
 
@@ -90,10 +91,10 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.STOCKS,
         }
     },
     async (req, res) => {
-        res.status(204).end();
+        return oauthSuccess(req, res);
     },
     async (req, res) => {
-        res.status(204).end();
+        return oauthSuccess(req, res);
     }
 );
 

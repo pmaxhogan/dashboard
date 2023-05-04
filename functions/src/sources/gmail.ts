@@ -4,6 +4,7 @@ import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import type {OAuth2Client} from "google-auth-library";
 import {debug, error} from "firebase-functions/logger";
+import oauthSuccess from "../oauthSuccess.js";
 
 prodConfig();
 
@@ -124,11 +125,20 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
                 tokens
             });
 
+            if (!tokens.refresh_token) {
+                error("No refresh token found!", {
+                    location: "gmail.callback",
+                    tokens
+                });
+                res.status(500).send("No refresh token found!");
+                return;
+            }
+
             // Set the credentials on the OAuth2 client
             await saveCredentials(tokens);
 
             // Redirect the user to the main page
-            res.status(204).end();
+            return oauthSuccess(req, res);
         } catch (e) {
             error(`Error getting access token ${e}`, {
                 location: "gmail.callback",
