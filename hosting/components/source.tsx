@@ -1,4 +1,4 @@
-import {apiBase} from "../lib/fetcher";
+import {fetchApi} from "../lib/fetcher";
 import React, {useEffect, useState} from "react";
 import dynamic from "next/dynamic";
 const ApexCharts = dynamic(() => import('react-apexcharts'), { ssr: false }) as any;
@@ -17,7 +17,7 @@ export default function Source({source, aggregate} : {source: string, aggregate?
         const {
             series: subCharts,
             stats: datapoints
-        } = await fetch(`${apiBase}/stats/${source}` + (aggregate ? `?aggregate=true&buckets=${aggregate}` : "")).then(response => response.json());
+        } = await fetchApi(`/stats/${source}` + (aggregate ? `?aggregate=true&buckets=${aggregate}` : "")).then(response => response.json());
         const subchartNames = Object.keys(subCharts);
         setSubchartNames(subchartNames);
         setChartNameToSeries(subchartNames.reduce((acc, name) => {

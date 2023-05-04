@@ -23,6 +23,27 @@ const sources = Object.keys(Source);
 
 app.use(cors({origin: process.env.CORS_ORIGIN}));
 
+const apiKey = process.env.NEXT_PUBLIC_API_KEY;
+
+const checkAuthorization: express.RequestHandler = (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({error: "Authorization header is missing"});
+    }
+
+    // noinspection UnnecessaryLocalVariableJS
+    const token = authHeader; // .split(" ")[1];
+
+    if (token !== apiKey) {
+        return res.status(401).json({error: "Invalid API key"});
+    }
+
+    next();
+};
+
+app.use(checkAuthorization);
+
 
 app.get("/sources", async (req, res) => {
     res.send({sources});
