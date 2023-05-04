@@ -172,7 +172,19 @@ async function refresh() {
     await setLoginCredentials(json.access_token, json.refresh_token);
 }
 
-export default new StatSource(1000 * 60 * 60, Source.FITBIT,
+const yesterdayAsStr = () => {
+    const date = new Date(); // current date and time
+    date.setDate(date.getDate() - 1); // yesterday
+    const [month, day, year] = date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: process.env.TIME_ZONE
+    }).split("/"); // format the date in the given time zone
+    return [year, month, day].join("-");
+};
+
+export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
     async () => {
         const {accessToken} = await getLoginCredentials();
 
@@ -181,28 +193,42 @@ export default new StatSource(1000 * 60 * 60, Source.FITBIT,
                 Authorization: `Bearer ${accessToken}`
             }
         };
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+        const dateStr = yesterdayAsStr();
 
         debug("refreshing fitbit", {
             location: "fitbit.fetch",
-            yesterdayStr
+            yesterdayStr: dateStr
         });
 
         const baseStr = "https://api.fitbit.com/1/user/-";
 
         const endpoints = [
-            `${baseStr}/br/date/${yesterdayStr}/all.json`,
-            `${baseStr}/cardioscore/date/${yesterdayStr}.json`,
-            `${baseStr}/hrv/date/${yesterdayStr}.json`,
-            `${baseStr}/temp/skin/date/${yesterdayStr}.json`,
-            `${baseStr}/activities/heart/date/${yesterdayStr}/1d.json`
+            `${baseStr}/br/date/${dateStr}/all.json`,
+            `${baseStr}/cardioscore/date/${dateStr}.json`,
+            `${baseStr}/hrv/date/${dateStr}.json`,
+            `${baseStr}/temp/skin/date/${dateStr}.json`,
+            `${baseStr}/activities/heart/date/${dateStr}/1d.json`
         ];
 
         const promises = endpoints.map((endpoint) => fetchRefreshIfNeeded(endpoint, authHeader).then((response) => response.json()));
 
-        const [breathing, vo2Max, hrv, skinTemp, heart] = await Promise.all(promises);
+        const results = await Promise.all(promises);
+
+        if (results.some((result) => result.success === false)) {
+            error("fitbit data failed", {
+                location: "fitbit.fetch",
+                results
+            });
+            return null;
+        }
+
+        const [breathing, vo2Max, hrv, skinTemp, heart] = results;
+
+        debug("fitbit data", {
+            location: "fitbit.fetch",
+            breathing, vo2Max, hrv, skinTemp, heart
+        });
 
         const breathingValues = breathing.br[0].value;
         const {dailyRmssd, deepRmssd} = hrv.hrv[0].value;
