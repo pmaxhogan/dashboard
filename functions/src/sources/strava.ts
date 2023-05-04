@@ -119,7 +119,7 @@ async function refresh() {
 }
 
 
-export default new StatSource(1000 * 60 * 60, Source.STRAVA,
+export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.STRAVA,
     async () => {
         const now = DateTime.now().setZone(process.env.TIME_ZONE as string);
         const yesterday = now.minus({days: 1});

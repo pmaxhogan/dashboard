@@ -83,8 +83,8 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
             id: "INBOX"
         });
 
-        if (typeof inboxLabel.data.messagesUnread === "number") {
-            stats.num_unread = inboxLabel.data.messagesUnread;
+        if (typeof inboxLabel.data.threadsUnread === "number") {
+            stats.num_unread = inboxLabel.data.threadsUnread;
             debug("Got gmail stats", {
                 location: "gmail.refresh",
                 data: inboxLabel.data,
