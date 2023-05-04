@@ -16,7 +16,31 @@ type StockStat = {
     close: number;
 }
 
-export default new StatSource(1000 * 60 * 60, Source.STOCKS,
+type ApiResult = {
+    T: string;
+    v: number;
+    vw: number;
+    o: number;
+    c: number;
+    h: number;
+    l: number;
+    t: number;
+    n: number;
+};
+
+type ApiData = {
+    ticker: string;
+    queryCount: number;
+    resultsCount: number;
+    adjusted: boolean;
+    results: ApiResult[];
+    status: string;
+    request_id: string;
+    count: number;
+};
+
+
+export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.STOCKS,
     async () => {
         const stats = {
             spy: {
@@ -32,13 +56,20 @@ export default new StatSource(1000 * 60 * 60, Source.STOCKS,
             stats
         });
 
-        const dateStr = (new Date()).toISOString().split("T")[0];
-        const url = `https://api.polygon.io/v1/open-close/SPY/${dateStr}?adjusted=true&apiKey=${process.env.POLYGON_API_KEY}`;
+        const url = `https://api.polygon.io/v2/aggs/ticker/${process.env.POLYGON_TICKER}/prev?adjusted=true&apiKey=${process.env.POLYGON_API_KEY}`;
         const req = await fetch(url);
-        const resp = await req.json() as { status: string } & StockStat;
+        debug("stock stats", {
+            location: "stocks.fetch",
+            url
+        });
+        const resp = await req.json() as ApiData;
+        debug("stock stats response", {
+            location: "stocks.fetch",
+            resp
+        });
 
         if (resp?.status === "OK") {
-            const {open, high, low, close} = resp as StockStat;
+            const {o: open, h: high, l: low, c: close} = resp.results[0];
 
             stats.spy = {
                 open,
