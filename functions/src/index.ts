@@ -66,7 +66,7 @@ app.get("/stats/:source", async (req, res) => {
         const latest = await latestStats(source);
 
         if (!latest) {
-            error(`No results found for ${source}`, {
+            error(`No latest stat found for ${source}`, {
                 route: "/stats/:source",
                 location: "route",
                 source

@@ -4,6 +4,7 @@ import {getOauthDb} from "../db.js";
 import crypto from "node:crypto";
 import fetch from "node-fetch";
 import {debug, error, warn} from "firebase-functions/logger";
+import {DateTime} from "luxon";
 
 prodConfig();
 
@@ -14,6 +15,13 @@ type SleepBreathingValues = {
     rem: number;
     light: number;
     full: number;
+}
+
+type SleepValues = {
+    deep: number;
+    light: number;
+    rem: number;
+    wake: number;
 }
 
 type HrvValues = {
@@ -28,6 +36,7 @@ type ActiveMinutesValues = {
 }
 
 type FitbitStats = {
+    sleep: SleepValues;
     sleepBreathing: SleepBreathingValues;
     vo2Max: {
         vo2MaxValue: number;
@@ -173,15 +182,9 @@ async function refresh() {
 }
 
 const yesterdayAsStr = () => {
-    const date = new Date(); // current date and time
-    date.setDate(date.getDate() - 1); // yesterday
-    const [month, day, year] = date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: process.env.TIME_ZONE
-    }).split("/"); // format the date in the given time zone
-    return [year, month, day].join("-");
+    const now = DateTime.now().setZone(process.env.TIME_ZONE);
+    const yesterday = now.minus({days: 1});
+    return yesterday.toFormat("yyyy-MM-dd");
 };
 
 export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
@@ -208,7 +211,8 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             `${baseStr}/cardioscore/date/${dateStr}.json`,
             `${baseStr}/hrv/date/${dateStr}.json`,
             `${baseStr}/temp/skin/date/${dateStr}.json`,
-            `${baseStr}/activities/heart/date/${dateStr}/1d.json`
+            `${baseStr}/activities/heart/date/${dateStr}/1d.json`,
+            `${baseStr}/sleep/date/${dateStr}.json`
         ];
 
         const promises = endpoints.map((endpoint) => fetchRefreshIfNeeded(endpoint, authHeader).then((response) => response.json()));
@@ -223,7 +227,7 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             return null;
         }
 
-        const [breathing, vo2Max, hrv, skinTemp, heart] = results;
+        const [breathing, vo2Max, hrv, skinTemp, heart, sleep] = results;
 
         debug("fitbit data", {
             location: "fitbit.fetch",
@@ -254,8 +258,10 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             peak: zones.find((zone: any) => zone.name === "Peak").minutes,
         };
 
+        const sleepData = sleep.summary.stages;
 
         const stats = {
+            sleep: sleepData,
             sleepBreathing,
             vo2Max: {
                 vo2MaxValue
@@ -332,7 +338,6 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             expires_in: string,
             user_id: string
         };
-        console.log("access_token", access_token, refresh_token, expires_in, user_id);
 
         debug("fitbit callback token", {
             location: "fitbit.callback",

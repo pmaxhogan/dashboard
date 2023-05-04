@@ -4,6 +4,7 @@ import {Source, StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import fetch from "node-fetch";
 import {debug, error, warn} from "firebase-functions/logger";
+import {DateTime} from "luxon";
 
 
 /**
@@ -48,7 +49,13 @@ async function setLoginCredentials(accessToken: string, refreshToken: string | u
  * @param {any} opts
  * @param {boolean} dontRefresh
  */
-async function fetchRefreshIfNeeded(url: string, opts: any, dontRefresh = false): Promise<any> {
+async function fetchRefreshIfNeeded(url: string, opts?: any, dontRefresh = false): Promise<any> {
+    const {accessToken} = await getLoginCredentials();
+
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers["Authorization"] = `Bearer ${accessToken}`;
+
     const req = await fetch(url, opts);
     if (req.status === 401) {
         warn("401, refreshing", {
@@ -111,27 +118,25 @@ async function refresh() {
     await setLoginCredentials(json.access_token, json.refresh_token);
 }
 
+
 export default new StatSource(1000 * 60 * 60, Source.STRAVA,
     async () => {
-        const {accessToken} = await getLoginCredentials();
+        const now = DateTime.now().setZone(process.env.TIME_ZONE as string);
+        const yesterday = now.minus({days: 1});
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString();
+        const startOfDay = yesterday.startOf("day").toUnixInteger();
+        const endOfDay = yesterday.endOf("day").toUnixInteger();
 
+        const baseStr = `https://www.strava.com/api/v3/athlete/activities?after=${startOfDay}&before=${endOfDay}`;
 
         debug("refreshing strava", {
             location: "strava.fetch",
-            todayStr
+            startOfDay,
+            endOfDay,
+            baseStr
         });
 
-        const baseStr = `https://www.strava.com/api/v3/athlete/activities?after=${todayStr}`;
-
-        const req = await fetchRefreshIfNeeded(baseStr, {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`
-            }
-        });
+        const req = await fetchRefreshIfNeeded(baseStr);
 
         const activities = await req.json() as any[];
 
@@ -161,7 +166,8 @@ export default new StatSource(1000 * 60 * 60, Source.STRAVA,
 
         debug("strava stats", {
             location: "strava.fetch",
-            result
+            result,
+            activities
         });
 
         return {
