@@ -2,26 +2,18 @@ import {getDb} from "./db.js";
 import prodConfig from "./prodConfig.js";
 import {debug, error, info, warn} from "firebase-functions/logger";
 
-/*
-example
-
-debug("Getting sources", {
-    route: "/sources",
-    location: "route",
-    sources
-});*/
-
 prodConfig();
 
-// create like so:
-// use homepage
-// db.createCollection("X", {timeseries: {timeField: "timestamp", metaField: "metadata", granularity: "seconds"}})
 
-export const deleteAll = async (colName: string) => {
+export const deleteAll = async (collName: string) => {
     const db = await getDb();
-    const collection = db.collection(colName);
+    const collection = db.collection(collName);
     const result = await collection.deleteMany({});
-    console.log(`${colName}: Deleted ${result.deletedCount} documents`);
+    info(`Deleted ${result.deletedCount} documents`, {
+        location: "deleteAll",
+        colName: collName,
+        numDeleted: result.deletedCount
+    });
 };
 
 export enum Source {
