@@ -9,6 +9,7 @@ import gmail from "./sources/gmail.js";
 import fitbit from "./sources/fitbit.js";
 import stocks from "./sources/stocks.js";
 import strava from "./sources/strava.js";
+import weather from "./sources/weather.js";
 
 import express from "express";
 import cors from "cors";
@@ -188,7 +189,8 @@ const statSources = [
     gmail,
     fitbit,
     stocks,
-    strava
+    strava,
+    weather
 ];
 
 /**

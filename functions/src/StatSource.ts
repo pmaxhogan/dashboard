@@ -24,6 +24,7 @@ export enum Source {
     FITBIT = "fitbit",
     STOCKS = "stocks",
     STRAVA = "strava",
+    WEATHER = "weather",
 }
 
 type RefreshFunction = () => Promise<RefreshData|null>;
