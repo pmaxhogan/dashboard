@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import {fetchApi, fetcher} from "../lib/fetcher";
+import {apiToken, fetchApi, fetcher} from "../lib/fetcher";
 import React from "react";
 import Source from "../components/source";
 import SourceButton from "../components/sourcebutton";
@@ -8,7 +8,7 @@ import SourceButton from "../components/sourcebutton";
 const DEFAULT_AGGREGATE = 300;
 
 export default function IndexPage() {
-    const {data: sourcesData, error: sourcesError} = useSWR(`/sources?apiKey=${process.env.NEXT_PUBLIC_API_KEY}`, fetcher);
+    const {data: sourcesData, error: sourcesError} = useSWR(`/sources?apiKey=${apiToken}`, fetcher);
     const [forceUpdateHack, setForceUpdateHack] = React.useState(false);
     const [aggregate, setAggregate] = React.useState<number|null>(DEFAULT_AGGREGATE);
     if (sourcesError || !sourcesData) return null;
