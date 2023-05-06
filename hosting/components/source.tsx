@@ -1,16 +1,16 @@
 import {fetchApi} from "../lib/fetcher";
 import React, {useEffect, useState} from "react";
 import dynamic from "next/dynamic";
-const ApexCharts = dynamic(() => import('react-apexcharts'), { ssr: false }) as any;
+
+const ApexCharts = dynamic(() => import('react-apexcharts'), {ssr: false}) as any;
 
 const MINUTE_MS = 1000 * 10 * 10000;
 
 
-export default function Source({source, aggregate} : {source: string, aggregate?: number}) {
+export default function Source({source, aggregate}: { source: string, aggregate?: number }) {
     const [subchartNames, setSubchartNames] = useState([]);
     const [chartNameToSeries, setChartNameToSeries] = useState({});
     const [isLoading, setIsLoading] = useState(true);
-
 
     async function fetchData() {
         setIsLoading(true);
@@ -20,11 +20,27 @@ export default function Source({source, aggregate} : {source: string, aggregate?
         } = await fetchApi(`/stats/${source}` + (aggregate ? `?aggregate=true&buckets=${aggregate}` : "")).then(response => response.json());
         const subchartNames = Object.keys(subCharts);
         setSubchartNames(subchartNames);
-        setChartNameToSeries(subchartNames.reduce((acc, name) => {
-            acc[name] = subCharts[name].map(series => ({
-                name: titleCase(series),
-                data: datapoints.map(point => [point.timestamp, point.stats[name][series]])
-            }))
+        setChartNameToSeries(subchartNames.reduce((acc, name, idx) => {
+            if (source === "STOCKS" && name === "spy") {
+                acc[name] = [{
+                    name: "SPY",
+                    data: datapoints.map(point => {
+                        return {
+                            x: (new Date(point.timestamp)),
+                            y: [point.stats[name].open, point.stats[name].high, point.stats[name].low, point.stats[name].close]
+                        };
+                    })
+                }];
+            } else {
+                acc[name] = subCharts[name].map(series => {
+                    return ({
+                        name: titleCase(series),
+                        data: datapoints.map(point => {
+                            return [point.timestamp, point.stats[name][series]];
+                        })
+                    });
+                })
+            }
             return acc;
         }, {}));
         setIsLoading(false);
@@ -47,12 +63,12 @@ export default function Source({source, aggregate} : {source: string, aggregate?
         const options = {
             chart: {
                 type: "area",
-                stacked: false,
-                height: 350,
-                zoom: {
+                    stacked: false,
+                    height: 350,
+                    zoom: {
                     type: "x",
-                    enabled: true,
-                    autoScaleYaxis: true
+                        enabled: true,
+                        autoScaleYaxis: true
                 },
                 toolbar: {
                     autoSelected: "zoom"
@@ -61,24 +77,21 @@ export default function Source({source, aggregate} : {source: string, aggregate?
             dataLabels: {
                 enabled: false
             },
-            markers: {
-                // size: 3,
-            },
             title: {
                 text: `${titleCase(source)} Source: ${titleCase(subchartName)}`,
-                align: "left"
+                    align: "left"
             },
             stroke: {
                 curve: "straight"
             },
             fill: {
                 type: "gradient",
-                gradient: {
+                    gradient: {
                     shadeIntensity: 1,
-                    inverseColors: false,
-                    opacityFrom: 0.9,
-                    opacityTo: 0,
-                    stops: [0, 90, 100],
+                        inverseColors: false,
+                        opacityFrom: 0.9,
+                        opacityTo: 0,
+                        stops: [0, 90, 100],
                 },
             },
             yaxis: {
@@ -93,7 +106,7 @@ export default function Source({source, aggregate} : {source: string, aggregate?
             },
             xaxis: {
                 type: "datetime",
-                labels: {
+                    labels: {
                     /*formatter: function (value, timestamp) {
                         return (new Date(timestamp)).toLocaleTimeString() // The formatter function overrides format property
                     },*/
@@ -103,7 +116,7 @@ export default function Source({source, aggregate} : {source: string, aggregate?
             },
             tooltip: {
                 shared: false,
-                y: {
+                    y: {
                     formatter: function (val) {
                         return val.toFixed(0)
                     }
@@ -115,8 +128,16 @@ export default function Source({source, aggregate} : {source: string, aggregate?
                 }
             }
         };
+        let type;
 
-        charts.push(<ApexCharts key={subchartName} options={options} series={chartNameToSeries[subchartName]} type="area" height={350} style={{margin: "10px"}} />);
+        if (source === "STOCKS" && subchartName === "spy") {
+            type = "candlestick";
+        } else {
+            type = "area";
+        }
+
+        charts.push(<ApexCharts key={subchartName} options={options} series={chartNameToSeries[subchartName]}
+                                type={type} height={350} style={{margin: "10px"}}/>);
     }
 
     return <>
