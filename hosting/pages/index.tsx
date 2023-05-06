@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import {fetcher} from "../lib/fetcher";
+import {fetchApi, fetcher} from "../lib/fetcher";
 import React from "react";
 import Source from "../components/source";
 import SourceButton from "../components/sourcebutton";
@@ -15,7 +15,7 @@ export default function IndexPage() {
     const sources = sourcesData.sources;
 
     async function refresh() {
-        await fetch(`/refresh`, {method: "POST"});
+        await fetchApi(`/refresh`, {method: "POST"});
     }
 
     return (

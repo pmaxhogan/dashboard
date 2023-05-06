@@ -81,7 +81,11 @@ async function fetchRefreshIfNeeded(url: string, opts?: any, dontRefresh = false
 }
 
 type StravaStats = {
-    rides: StravaRideStats
+    rides: StravaRideStats,
+    biggest: StravaBiggestStats,
+    ytd: StravaTimeStats,
+    allTime: StravaTimeStats,
+    following: StravaFollowingStats
 };
 
 type StravaRideStats = {
@@ -92,6 +96,24 @@ type StravaRideStats = {
     max_speed: number,
     average_watts: number,
 };
+
+type StravaBiggestStats = {
+    distance: number,
+    climb: number,
+}
+
+type StravaTimeStats = {
+    time: number,
+    distance: number,
+    elevation: number,
+    count: number,
+}
+
+type StravaFollowingStats = {
+    followers: number,
+    following: number,
+}
+
 
 /**
  * Refresh the access token
@@ -163,11 +185,44 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.STRAVA,
             }), {distance: 0, total_elevation_gain: 0, achievement_count: 0, average_speed: 0, max_speed: 0, average_watts: 0})
         } as StravaStats;
 
+        const profileInfo = await fetchRefreshIfNeeded("https://www.strava.com/api/v3/athlete");
+        const profile = await profileInfo.json();
+
+        const stats = await fetchRefreshIfNeeded("https://www.strava.com/api/v3/athletes/45095733/stats");
+        const statsObj = await stats.json();
+
+        result.biggest = {
+            distance: metersToMiles(statsObj.biggest_ride_distance),
+            climb: metersToFeet(statsObj.biggest_climb_elevation_gain)
+        };
+
+        result.ytd = {
+            count: statsObj.ytd_ride_totals.count,
+            distance: metersToMiles(statsObj.ytd_ride_totals.distance),
+            time: statsObj.ytd_ride_totals.moving_time,
+            elevation: metersToFeet(statsObj.ytd_ride_totals.elevation_gain)
+        };
+
+        result.allTime = {
+            count: statsObj.all_ride_totals.count,
+            distance: metersToMiles(statsObj.all_ride_totals.distance),
+            time: statsObj.all_ride_totals.moving_time,
+            elevation: metersToFeet(statsObj.all_ride_totals.elevation_gain)
+        };
+
+        result.following = {
+            followers: profile.follower_count,
+            following: profile.friend_count
+        };
 
         debug("strava stats", {
             location: "strava.fetch",
             result,
-            activities
+        });
+
+        debug("test", {
+            location: "strava.fetch",
+            statsObj
         });
 
         return {
