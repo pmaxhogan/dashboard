@@ -26,7 +26,7 @@ app.use(cors({origin: process.env.CORS_ORIGIN}));
 const apiKey = process.env.NEXT_PUBLIC_API_KEY;
 
 const checkAuthorization: express.RequestHandler = (req: any, res: any, next: any) => {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization || req.query.apiKey;
 
     if (!authHeader) {
         return res.status(401).json({error: "Authorization header is missing"});

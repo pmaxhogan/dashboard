@@ -175,7 +175,7 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.STRAVA,
         };
     },
     async (req, res) => {
-        const redirectUri = `${process.env.API_BASE}/callback/strava`;
+        const redirectUri = `${process.env.API_BASE}/callback/strava?apiKey=${process.env.NEXT_PUBLIC_API_KEY}`;
         const clientId = process.env.STRAVA_CLIENT_ID;
         const url = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&\
 approval_prompt=auto&scope=activity:read_all,profile:read_all,read_all`;

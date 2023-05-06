@@ -52,7 +52,7 @@ type FitbitStats = {
     hrvValues: HrvValues;
 }
 
-const callbackUri = `${process.env.API_BASE}/callback/fitbit`;
+const callbackUri = `${process.env.API_BASE}/callback/fitbit?apiKey=${process.env.NEXT_PUBLIC_API_KEY}`;
 const authHeader = `Basic ${Buffer.from(`${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`).toString("base64")}`;
 
 /**

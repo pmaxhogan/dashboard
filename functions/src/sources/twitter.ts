@@ -21,7 +21,7 @@ const loginClient = new TwitterApi({
     clientSecret: process.env.TWITTER_CLIENT_SECRET as string
 });
 
-const callbackUri = `${process.env.API_BASE}/callback/twitter`;
+const callbackUri = `${process.env.API_BASE}/callback/twitter?apiKey=${process.env.NEXT_PUBLIC_API_KEY}`;
 
 /**
  * Login verifier

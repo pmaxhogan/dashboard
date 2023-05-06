@@ -9,7 +9,7 @@ import oauthSuccess from "../oauthSuccess.js";
 prodConfig();
 
 const {OAuth2} = auth;
-const callbackUri = `${process.env.API_BASE}/callback/gmail`;
+const callbackUri = `${process.env.API_BASE}/callback/gmail?apiKey=${process.env.NEXT_PUBLIC_API_KEY}`;
 
 let _client: OAuth2Client;
 const getOauth2Client = () => {
