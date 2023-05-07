@@ -46,10 +46,12 @@ export class StatSource {
      * @param {number} refreshFrequency
      * @param {Source} source
      * @param {RefreshFunction} refresh
+     * @param {(req: any, res: any) => Promise<any>} loginFunction
+     * @param {(req: any, res: any) => Promise<any>} callbackFunction
      */
     constructor(public refreshFrequency: number, public source: Source, public refresh: RefreshFunction,
                 public loginFunction: (req: any, res: any) => Promise<any>,
-                public callbackFunction: (req: any, res: any) => Promise<any>,
+                public callbackFunction: (req: any, res: any) => Promise<any>
     ) {
         const deleteAllOnStart = process.env.DELETE_ALL_ON_START === "true";
 
