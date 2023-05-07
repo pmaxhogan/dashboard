@@ -36,7 +36,7 @@ export default function Source({source, aggregate}: { source: string, aggregate?
                     return ({
                         name: titleCase(series),
                         data: datapoints.map(point => {
-                            return [point.timestamp, point.stats[name][series]];
+                            return [point.timestamp, point.stats[name][series] ?? 0];
                         })
                     });
                 })
@@ -63,12 +63,13 @@ export default function Source({source, aggregate}: { source: string, aggregate?
         const options = {
             chart: {
                 type: "area",
-                    stacked: false,
-                    height: 350,
-                    zoom: {
+                stacked: false,
+                height: 350,
+                foreColor: "#ccc", // heading colors
+                zoom: {
                     type: "x",
-                        enabled: true,
-                        autoScaleYaxis: true
+                    enabled: true,
+                    autoScaleYaxis: true
                 },
                 toolbar: {
                     autoSelected: "zoom"
@@ -78,26 +79,16 @@ export default function Source({source, aggregate}: { source: string, aggregate?
                 enabled: false
             },
             title: {
-                text: `${titleCase(source)} Source: ${titleCase(subchartName)}`,
-                    align: "left"
+                text: `${titleCase(source)}: ${titleCase(subchartName)}`,
+                align: "left"
             },
             stroke: {
                 curve: "straight"
             },
-            fill: {
-                type: "gradient",
-                    gradient: {
-                    shadeIntensity: 1,
-                        inverseColors: false,
-                        opacityFrom: 0.9,
-                        opacityTo: 0,
-                        stops: [0, 90, 100],
-                },
-            },
             yaxis: {
                 labels: {
                     formatter: function (val) {
-                        return val.toFixed(0);
+                        return val?.toFixed(0);
                     },
                 },
                 title: {
@@ -106,7 +97,7 @@ export default function Source({source, aggregate}: { source: string, aggregate?
             },
             xaxis: {
                 type: "datetime",
-                    labels: {
+                labels: {
                     /*formatter: function (value, timestamp) {
                         return (new Date(timestamp)).toLocaleTimeString() // The formatter function overrides format property
                     },*/
@@ -116,9 +107,9 @@ export default function Source({source, aggregate}: { source: string, aggregate?
             },
             tooltip: {
                 shared: false,
-                    y: {
+                y: {
                     formatter: function (val) {
-                        return val.toFixed(0)
+                        return val?.toFixed(0)
                     }
                 },
                 x: {
@@ -136,8 +127,9 @@ export default function Source({source, aggregate}: { source: string, aggregate?
             type = "area";
         }
 
-        charts.push(<ApexCharts key={subchartName} options={options} series={chartNameToSeries[subchartName]}
-                                type={type} height={350} style={{margin: "10px"}}/>);
+        charts.push(<ApexCharts className="panel" key={subchartName} options={options}
+                                series={chartNameToSeries[subchartName]}
+                                type={type} height={350}/>);
     }
 
     return <>

@@ -29,7 +29,7 @@ export default function IndexPage() {
                 <input type="checkbox" checked={aggregate !== null} onChange={(e) => setAggregate(e.target.checked ? DEFAULT_AGGREGATE : null)}/>
             </label>
             {aggregate && <input type="number" value={aggregate} min={10} max={10000} step={10} onChange={(e) => setAggregate(parseInt(e.target.value))}/>}
-            <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(500px, 1fr))"}}>
+            <div className="panels">
                 {sources.map((source) => (<Source key={source + "-" + forceUpdateHack} source={source} aggregate={aggregate}/>))}
             </div>
         </>

@@ -1,0 +1,22 @@
+body {
+    background: rgb(0,7,68);
+    background: linear-gradient(162deg, rgba(0,7,68,1) 0%, rgba(47,4,102,1) 13%, rgb(0 0 0) 42%);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.panels{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+}
+
+.panel{
+    --opacity: 0.2;
+    --opacity-border: 0.2;
+    background: linear-gradient(162deg, rgba(40,47,108,var(--opacity)) 0%, rgba(67,24,122,var(--opacity)) 50%);
+    border: 1px solid rgba(255, 255, 255, var(--opacity-border));
+    border-radius: 10px;
+    margin: 10px;
+    padding: 10px;
+}
