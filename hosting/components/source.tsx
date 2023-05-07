@@ -83,7 +83,7 @@ export default function Source({source, aggregate}: { source: string, aggregate?
                 align: "left"
             },
             stroke: {
-                curve: "straight"
+                curve: "smooth"
             },
             yaxis: {
                 labels: {
