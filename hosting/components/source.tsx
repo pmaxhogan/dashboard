@@ -107,10 +107,11 @@ export default function Source({source, aggregate}: { source: string, aggregate?
     const charts = [];
 
     for (const subchartName of subchartNames) {
+        const isStackedBar = source === "FITBIT" && subchartName === "sleep";
+
         const options = {
             chart: {
-                type: "area",
-                stacked: false,
+                stacked: isStackedBar,
                 height: 350,
                 foreColor: "#ccc", // heading colors
                 zoom: {
@@ -166,6 +167,8 @@ export default function Source({source, aggregate}: { source: string, aggregate?
 
         if (source === "STOCKS" && subchartName === "spy") {
             type = "candlestick";
+        } else if (isStackedBar) {
+            type = "bar";
         } else {
             type = "area";
         }
