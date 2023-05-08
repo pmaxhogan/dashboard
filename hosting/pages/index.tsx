@@ -59,29 +59,28 @@ export default function IndexPage() {
         setChartToIsLoading(newValues => ({...newValues, [source]: false}));
     }
 
-    useEffect(() => {
+
+    function refreshCharts() {
         for(const source of sources) {
             fetchData(source);
         }
-        const interval = setInterval(() => {
-            for(const source of sources) {
-                fetchData(source);
-            }
-        }, refreshInterval);
+    }
+
+    useEffect(() => {
+        refreshCharts();
+        const interval = setInterval(refreshCharts, refreshInterval);
 
         return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
     }, [aggregate, sources]);
 
     if (sourcesError || !sourcesData) return null;
 
-
-
     return (
         <>
             <button onClick={refresh}>Check for stats update</button>
             {sources.map((source) => (<SourceButton key={source} source={source}/>))}
             <br/>
-            <button onClick={() => setForceUpdateHack(!forceUpdateHack )}>Refresh Charts</button>
+            <button onClick={refreshCharts}>Refresh Charts</button>
             <label>
                 Aggregate?
                 <input type="checkbox" checked={aggregate !== null} onChange={(e) => setAggregate(e.target.checked ? DEFAULT_AGGREGATE : null)}/>
