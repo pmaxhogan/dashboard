@@ -3,7 +3,6 @@ import {debug, error, info, warn} from "firebase-functions/logger";
 
 import prodConfig from "./prodConfig.js";
 import twitter from "./sources/twitter.js";
-import time from "./sources/timeSource.js";
 import trello from "./sources/trello.js";
 import gmail from "./sources/gmail.js";
 import fitbit from "./sources/fitbit.js";
@@ -192,8 +191,6 @@ const statSources = [
     strava,
     weather
 ];
-
-if (process.env.TIME_SOURCE_ENABLED === "true") statSources.push(time);
 
 /**
  * Get the latest stats for a source

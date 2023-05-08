@@ -18,7 +18,6 @@ export const deleteAll = async (collName: string) => {
 
 export enum Source {
     TWITTER = "twitter",
-    TIME = "time",
     TRELLO = "trello",
     GMAIL = "gmail",
     FITBIT = "fitbit",
