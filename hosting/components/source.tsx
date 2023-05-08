@@ -5,7 +5,7 @@ import {Duration} from "luxon";
 
 const ApexCharts = dynamic(() => import("react-apexcharts"), {ssr: false}) as any;
 
-const MINUTE_MS = 1000 * 10 * 10000;
+const refreshInterval = 1000 * 7;
 
 
 function formatDurationMinutes(minutes) {
@@ -54,13 +54,14 @@ const getFormatter = (source, subchartName, chartNameToSeries) => (val, obj) => 
     return val?.toFixed(0);
 };
 
+const monochrome = false;
+
 export default function Source({source, aggregate}: { source: string, aggregate?: number }) {
     const [subchartNames, setSubchartNames] = useState([]);
     const [chartNameToSeries, setChartNameToSeries] = useState({});
     const [isLoading, setIsLoading] = useState(true);
 
     async function fetchData() {
-        setIsLoading(true);
         const {
             series: subCharts,
             stats: datapoints
@@ -95,7 +96,7 @@ export default function Source({source, aggregate}: { source: string, aggregate?
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, MINUTE_MS);
+        const interval = setInterval(fetchData, refreshInterval);
 
         return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
     }, [aggregate]);
@@ -121,14 +122,39 @@ export default function Source({source, aggregate}: { source: string, aggregate?
                 },
                 toolbar: {
                     autoSelected: "zoom"
+                },
+                background: "#FFFFFF00"
+            },
+            theme: {
+                mode: 'dark',
+                palette: 'palette10',
+                monochrome: {
+                    enabled: monochrome,
+                    color: '#77006f',
+                    shadeIntensity: 1
                 }
             },
             dataLabels: {
                 enabled: false
             },
             title: {
-                text: `${titleCase(source)}: ${titleCase(subchartName)}`,
-                align: "left"
+                text: `${titleCase(source)}`,
+                align: "left",
+                style: {
+                    fontSize: "23px",
+                    fontWeight: "bold",
+                    fontFamily: "Roboto",
+                }
+            },
+            subtitle: {
+                text: `${subchartName.slice(0, 1).toUpperCase()}${subchartName.slice(1).replaceAll("_", " ")}`,
+                align: "left",
+                style: {
+                    fontSize: "17px",
+                    fontWeight: "bold",
+                    fontFamily: "Roboto",
+                    color: "rgba(204,204,204,0.55)"
+                }
             },
             stroke: {
                 curve: "smooth"
@@ -136,9 +162,12 @@ export default function Source({source, aggregate}: { source: string, aggregate?
             yaxis: {
                 labels: {
                     formatter: getFormatter(source, subchartName, chartNameToSeries),
-                },
-                title: {
-                    text: "Value"
+                    style: {
+                        fontSize: "14px",
+                        fontFamily: "Roboto",
+                        colors: ["rgba(204,204,204,0.53)"]
+                    },
+                    minWidth: 40,
                 },
             },
             xaxis: {
@@ -151,6 +180,11 @@ export default function Source({source, aggregate}: { source: string, aggregate?
                 }
                 // tickAmount: 6
             },
+            plotOptions: {
+                bar: {
+                    borderRadius: 5,
+                }
+            },
             tooltip: {
                 shared: false,
                 y: {
@@ -161,6 +195,11 @@ export default function Source({source, aggregate}: { source: string, aggregate?
                         return (new Date(val)).toLocaleTimeString()
                     }
                 }
+            },
+            grid: {
+                show: true,
+                borderColor: "rgba(166,166,166,0.62)",
+                strokeDashArray: 4,
             }
         };
         let type;

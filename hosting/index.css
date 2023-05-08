@@ -1,6 +1,6 @@
 body {
     background: rgb(0,7,68);
-    background: linear-gradient(162deg, rgba(0,7,68,1) 0%, rgba(47,4,102,1) 13%, rgb(0 0 0) 42%);
+    background: radial-gradient(ellipse at 10% 10%, rgba(0,7,49,1) 0%, rgba(17,4,72,1) 33%, rgb(0 0 0) 80%);
     background-size: 100%;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -12,11 +12,12 @@ body {
 }
 
 .panel{
-    --opacity: 0.2;
-    --opacity-border: 0.2;
-    background: linear-gradient(162deg, rgba(40,47,108,var(--opacity)) 0%, rgba(67,24,122,var(--opacity)) 50%);
-    border: 1px solid rgba(255, 255, 255, var(--opacity-border));
+    --opacity: 0.4;
+    --opacity-border: 0.08;
+    background: radial-gradient(ellipse at right top, rgba(50,57,117,var(--opacity)) 0%, rgba(77,34,132,var(--opacity)) 75%);
+    border: 2px solid rgba(255, 255, 255, var(--opacity-border));
     border-radius: 10px;
-    margin: 10px;
-    padding: 10px;
+    margin: 12px;
+    padding: 12px;
+    box-shadow: 6px 6px 18px 5px #0000007d;
 }
