@@ -5,7 +5,7 @@ import Source from "../components/source";
 import SourceButton from "../components/sourcebutton";
 import {titleCase} from "../lib/chartUtils";
 
-const refreshInterval = 1000 * 7;
+const refreshInterval = 1000 * 60 * 10;
 const DEFAULT_AGGREGATE = 100;
 
 export default function IndexPage() {

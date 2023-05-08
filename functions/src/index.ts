@@ -47,11 +47,7 @@ app.use(checkAuthorization);
 
 
 app.get("/sources", async (req, res) => {
-    const sourcesCopy = sources;
-    if (process.env.TIME_SOURCE_ENABLED !== "true") {
-        sourcesCopy.splice(sourcesCopy.indexOf("TIME"), 1);
-    }
-
+    const sourcesCopy = sources.filter((source) => source !== "TIME" || process.env.TIME_SOURCE_ENABLED === "true");
     res.send({sources: sourcesCopy});
     debug("Getting sources", {
         route: "/sources",
