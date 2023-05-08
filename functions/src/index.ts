@@ -47,11 +47,16 @@ app.use(checkAuthorization);
 
 
 app.get("/sources", async (req, res) => {
-    res.send({sources});
+    const sourcesCopy = sources;
+    if (process.env.TIME_SOURCE_ENABLED !== "true") {
+        sourcesCopy.splice(sourcesCopy.indexOf("TIME"), 1);
+    }
+
+    res.send({sources: sourcesCopy});
     debug("Getting sources", {
         route: "/sources",
         location: "route",
-        sources
+        sourcesCopy
     });
 });
 
@@ -184,7 +189,6 @@ app.post("/refresh", async (req, res) => {
 
 const statSources = [
     twitter,
-    time,
     trello,
     gmail,
     fitbit,
@@ -192,6 +196,8 @@ const statSources = [
     strava,
     weather
 ];
+
+if (process.env.TIME_SOURCE_ENABLED === "true") statSources.push(time);
 
 /**
  * Get the latest stats for a source
