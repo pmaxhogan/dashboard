@@ -81,7 +81,7 @@ export default function IndexPage() {
         ["gmail.inbox.num_unread", "Unread Emails"],
         ["weather.temp.temp", "°F"],
         ["weather.wind.speed", "mph wind"],
-        ["trello.total_time_in_label.school", "School Work"],
+        ["trello.total_time_in_label.school", "Homework"],
         ["trello.total_time_in_list.ready", "Ready"],
         ["trello.total_time_in_list.in_progress", "In Progress"],
         ["strava.allTime.distance", "mi on bike"],
