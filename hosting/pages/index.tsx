@@ -4,6 +4,7 @@ import React, {useEffect} from "react";
 import Source from "../components/source";
 import SourceButton from "../components/sourcebutton";
 import {titleCase} from "../lib/chartUtils";
+import Sparkline from "../components/sparkline";
 
 const refreshInterval = 1000 * 60 * 10;
 const DEFAULT_AGGREGATE = 100;
@@ -75,6 +76,26 @@ export default function IndexPage() {
 
     if (sourcesError || !sourcesData) return null;
 
+    const sparklineData = [
+        ["twitter.profile.followers", "Followers"],
+        ["gmail.inbox.num_unread", "Unread Emails"],
+        ["weather.temp.temp", "°F"],
+        ["weather.wind.speed", "mph wind"],
+        ["trello.total_time_in_label.school", "School Work"],
+        ["trello.total_time_in_list.ready", "Ready"],
+        ["trello.total_time_in_list.in_progress", "In Progress"],
+        ["strava.allTime.distance", "mi on bike"],
+    ];
+
+    const sparklines = sparklineData.map(([name, friendlyName]) => {
+        const source = name.split(".")[0].toUpperCase();
+        const chart = name.split(".")[1];
+        const seriesFriendly = titleCase(name.split(".")[2].toLowerCase());
+        console.log(chartToSubchartNameToSeries[source]);
+        const series = chartToSubchartNameToSeries[source] && chartToSubchartNameToSeries[source][chart].filter(series => series.name === seriesFriendly);
+        return <Sparkline series={series} key={name} dataPath={name} friendlyName={friendlyName} isLoading={chartToIsLoading[source]}/>
+    });
+
     return (
         <>
             <button onClick={refresh}>Check for stats update</button>
@@ -86,6 +107,10 @@ export default function IndexPage() {
                 <input type="checkbox" checked={aggregate !== null} onChange={(e) => setAggregate(e.target.checked ? DEFAULT_AGGREGATE : null)}/>
             </label>
             {aggregate && <input type="number" value={aggregate} min={10} max={10000} step={10} onChange={(e) => setAggregate(parseInt(e.target.value))}/>}
+
+            <div className="sparklines">
+                {sparklines}
+            </div>
             <div className="panels">
                 {sources.map((source) => (<Source key={source + "-" + forceUpdateHack} source={source} subchartNames={chartToSubchartNames[source]} chartNameToSeries={chartToSubchartNameToSeries[source]} isLoading={chartToIsLoading[source]}/>))}
             </div>

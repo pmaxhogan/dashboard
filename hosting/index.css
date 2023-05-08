@@ -21,3 +21,19 @@ body {
     padding: 12px;
     box-shadow: 6px 6px 18px 5px #0000007d;
 }
+
+.sparklines{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.sparkline{
+    display: flex;
+    align-items: center;
+    font-family: "Roboto", sans-serif;
+    color: #cccccc;
+}
+
+.sparkline .count{
+    font-size: 40px;
+}

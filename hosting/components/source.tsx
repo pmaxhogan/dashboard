@@ -50,6 +50,13 @@ export default function Source({source, subchartNames, isLoading, chartNameToSer
                         fontFamily: "Roboto",
                     }
                 },
+                animations: {
+                    enabled: true,
+                    easing: "linear",
+                    dynamicAnimation: {
+                        speed: 1000
+                    }
+                },
                 subtitle: {
                     text: `${subchartName.slice(0, 1).toUpperCase()}${subchartName.slice(1).replaceAll("_", " ")}`,
                     align: "left",

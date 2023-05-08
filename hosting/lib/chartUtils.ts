@@ -1,9 +1,6 @@
-export const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 import {Duration} from "luxon";
 
-
-
-
+export const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 export function formatDurationMinutes(minutes) {
     const duration = Duration.fromObject({ minutes });
     const days = Math.floor(duration.as("days"));
@@ -19,8 +16,6 @@ export function formatDurationMinutes(minutes) {
 }
 
 export const formatDurationSeconds = (seconds) => formatDurationMinutes(seconds / 60);
-
-
 
 
 const sourceToFormat: { sources: string[]; format: (value) => string }[] = [
@@ -43,11 +38,17 @@ export const getFormatter = (source, subchartName, chartNameToSeries) => (val, o
         searchStrings.push(`${source.toLowerCase()}.${subchartName}.${seriesName}`.toLowerCase());
     }
 
+    return getFormatterManual(searchStrings)(val);
+};
+
+export const getFormatterManual = (searchStrings) => (val) => {
     for (const {sources, format} of sourceToFormat) {
         if (sources.some(source => searchStrings.includes(source))) {
             return format(val);
         }
     }
 
-    return val?.toFixed(0);
+    return val && toDecimal(val, 0);
 };
+
+export const toDecimal = (num, places = 2) => parseFloat(num.toFixed(places));
