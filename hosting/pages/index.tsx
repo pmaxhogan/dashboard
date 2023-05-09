@@ -17,6 +17,8 @@ export default function IndexPage() {
     const [chartToSubchartNames, setChartToSubchartNames] = React.useState({});
     const [chartToSubchartNameToSeries, setChartToSubChartNameToSeries] = React.useState({});
     const [chartToIsLoading, setChartToIsLoading] = React.useState({});
+    const [sinceTime, setSinceTime] = React.useState(1);
+    const [sinceUnits, setSinceUnits] = React.useState(null);
 
 
     const sources = sourcesData?.sources ?? [];
@@ -27,10 +29,12 @@ export default function IndexPage() {
 
 
     async function fetchData(source) {
+        const queryStr = sinceTime && sinceUnits ? `sinceTime=${sinceTime}&sinceUnits=${sinceUnits}` : "";
+
         const {
             series: subCharts,
             stats: datapoints
-        } = await fetchApi(`/stats/${source}` + (aggregate ? `?aggregate=true&buckets=${aggregate}` : "")).then(response => response.json());
+        } = await fetchApi(`/stats/${source}?${queryStr}` + (aggregate ? `&aggregate=true&buckets=${aggregate}` : "")).then(response => response.json());
         const subchartNames = Object.keys(subCharts);
         setChartToSubchartNames(newValues => ({...newValues, [source]: subchartNames}));
         setChartToSubChartNameToSeries(newValues => ({...newValues, [source]: subchartNames.reduce((acc, name, idx) => {
@@ -91,8 +95,9 @@ export default function IndexPage() {
         const source = name.split(".")[0].toUpperCase();
         const chart = name.split(".")[1];
         const seriesFriendly = titleCase(name.split(".")[2].toLowerCase());
-        const series = chartToSubchartNameToSeries[source] && chartToSubchartNameToSeries[source][chart].filter(series => series.name === seriesFriendly);
-        return <Sparkline series={series} key={name} dataPath={name} friendlyName={friendlyName} isLoading={chartToIsLoading[source]}/>
+        const series = chartToSubchartNameToSeries[source] && chartToSubchartNameToSeries[source][chart]?.filter(series => series.name === seriesFriendly);
+        console.log(series);
+        return series ? <Sparkline series={series} key={name} dataPath={name} friendlyName={friendlyName} isLoading={chartToIsLoading[source]}/> : null;
     });
 
     return (

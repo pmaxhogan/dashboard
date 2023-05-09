@@ -7,6 +7,8 @@ const ApexCharts = dynamic(() => import("react-apexcharts"), {ssr: false}) as an
 
 const monochrome = false;
 
+const sparklineTimeframe = 1000 * 60 * 60 * 24 * 7;
+
 export default function Sparkline({series, dataPath, friendlyName, isLoading}: {
     series: any[],
     dataPath: string,
@@ -94,9 +96,11 @@ export default function Sparkline({series, dataPath, friendlyName, isLoading}: {
             }
         }
     };
+
+
     const seriesData = [{
         name: "",
-        data: series[0].data
+        data: series[0].data.filter(([time]) => new Date(time).getTime() > new Date().getTime() - sparklineTimeframe)
     }];
 
     const formatter = getFormatterManual([dataPath.split(".")[0], dataPath.split(".").slice(0, 2).join("."), dataPath]);

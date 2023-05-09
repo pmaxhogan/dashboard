@@ -14,6 +14,7 @@ import express from "express";
 import cors from "cors";
 import {deleteAll, Source, StatSource} from "./StatSource.js";
 import {getDb} from "./db.js";
+import {DateTime, Duration} from "luxon";
 
 prodConfig();
 
@@ -67,6 +68,8 @@ app.get("/stats/:source", async (req, res) => {
     const db = await getDb();
     const aggregate = req.query.aggregate === "true";
     const buckets = aggregate ? parseInt(req.query.buckets as string) || 200 : 0;
+    const sinceTime = req.query.sinceTime ? parseInt(req.query.sinceTime as string) : 0;
+    const sinceUnits = req.query.sinceUnits as string;
 
     const source = req.params.source;
     debug(`Getting stats for ${source} (aggregate: ${aggregate}, buckets: ${buckets})`, {
@@ -74,7 +77,9 @@ app.get("/stats/:source", async (req, res) => {
         location: "route",
         source,
         aggregate,
-        buckets
+        buckets,
+        sinceTime,
+        sinceUnits
     });
 
     if (!sources.includes(source)) {
@@ -105,7 +110,33 @@ app.get("/stats/:source", async (req, res) => {
             }
         }
 
+        let pipelineStart: any[] = [];
+
+        if (sinceTime && sinceUnits) {
+            const start = DateTime.now().minus(Duration.fromObject({[sinceUnits]: sinceTime})).toJSDate();
+
+            pipelineStart = [
+                {
+                    $match: {
+                        timestamp: {
+                            $gte: start,
+                            // $lte: new Date(finish)
+                        }
+                    }
+                },
+            ];
+
+            debug("Timeboxing aggregate pipeline", {
+                route: "/stats/:source",
+                location: "route",
+                pipelineStart,
+                sinceTime,
+                sinceUnits
+            });
+        }
+
         const pipeline = [
+            ...pipelineStart,
             {
                 $sample: {
                     size: 10000
