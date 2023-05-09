@@ -100,7 +100,7 @@ export default function Sparkline({series, dataPath, friendlyName, isLoading}: {
 
     const seriesData = [{
         name: "",
-        data: series[0].data.filter(([time]) => new Date(time).getTime() > new Date().getTime() - sparklineTimeframe)
+        data: series[0].data.filter(([time]) => new Date(time).getTime() + sparklineTimeframe > new Date().getTime())
     }];
 
     const formatter = getFormatterManual([dataPath.split(".")[0], dataPath.split(".").slice(0, 2).join("."), dataPath]);
