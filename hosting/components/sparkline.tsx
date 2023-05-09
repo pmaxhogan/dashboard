@@ -7,7 +7,7 @@ const ApexCharts = dynamic(() => import("react-apexcharts"), {ssr: false}) as an
 
 const monochrome = false;
 
-const sparklineTimeframe = 1000 * 60 * 60 * 24 * 7;
+const sparklineTimeframe = 1000 * 60 * 60 * 24;
 
 export default function Sparkline({series, dataPath, friendlyName, isLoading}: {
     series: any[],
