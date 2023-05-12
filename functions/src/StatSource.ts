@@ -1,6 +1,7 @@
 import {getDb} from "./db.js";
 import prodConfig from "./prodConfig.js";
 import {debug, error, info, warn} from "firebase-functions/logger";
+import {Source} from "./chart";
 
 prodConfig();
 
@@ -15,16 +16,6 @@ export const deleteAll = async (collName: string) => {
         numDeleted: result.deletedCount
     });
 };
-
-export enum Source {
-    TWITTER = "twitter",
-    TRELLO = "trello",
-    GMAIL = "gmail",
-    FITBIT = "fitbit",
-    STOCKS = "stocks",
-    STRAVA = "strava",
-    WEATHER = "weather",
-}
 
 type RefreshFunction = () => Promise<RefreshData|null>;
 

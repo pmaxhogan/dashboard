@@ -1,10 +1,11 @@
 import prodConfig from "../prodConfig.js";
 import {auth, gmail} from "@googleapis/gmail";
-import {Source, StatSource} from "../StatSource.js";
+import {StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import type {OAuth2Client} from "google-auth-library";
 import {debug, error} from "firebase-functions/logger";
 import oauthSuccess from "../oauthSuccess.js";
+import {Source} from "../chart.js";
 
 prodConfig();
 

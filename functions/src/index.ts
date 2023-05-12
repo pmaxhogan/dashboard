@@ -12,9 +12,10 @@ import weather from "./sources/weather.js";
 
 import express from "express";
 import cors from "cors";
-import {deleteAll, Source, StatSource} from "./StatSource.js";
+import {deleteAll, StatSource} from "./StatSource.js";
 import {getDb} from "./db.js";
 import {DateTime, Duration} from "luxon";
+import {Chart, Source} from "./chart.js";
 
 prodConfig();
 
@@ -53,6 +54,132 @@ app.get("/sources", async (req, res) => {
         route: "/sources",
         location: "route",
         sourcesCopy
+    });
+});
+
+const charts:Chart[] = [
+    {
+        title: "Followers",
+        type: "sparkline",
+        source: Source.TWITTER,
+        subSource: "profile",
+        series: [{id: "followers"}],
+        since: {
+            value: 1,
+            units: "weeks"
+        }
+    },
+    {
+        title: "Unread Emails",
+        type: "sparkline",
+        source: Source.GMAIL,
+        subSource: "inbox",
+        series: [{id: "num_unread"}],
+        since: {
+            value: 3,
+            units: "days"
+        }
+    },
+    {
+        title: "°F",
+        type: "sparkline",
+        source: Source.WEATHER,
+        subSource: "temp",
+        series: [{id: "temp"}],
+        since: {
+            value: 1,
+            units: "days"
+        }
+    },
+    {
+        title: "mph wind",
+        type: "sparkline",
+        source: Source.WEATHER,
+        subSource: "wind",
+        series: [{id: "speed"}],
+        since: {
+            value: 1,
+            units: "days"
+        }
+    },
+    {
+        title: "School Hours",
+        type: "sparkline",
+        source: Source.TRELLO,
+        subSource: "total_time_in_label",
+        series: [{id: "school"}],
+        since: {
+            value: 3,
+            units: "days"
+        }
+    },
+    {
+        title: "Ready",
+        type: "sparkline",
+        source: Source.TRELLO,
+        subSource: "total_time_in_list",
+        series: [{id: "ready"}],
+        since: {
+            value: 3,
+            units: "days"
+        }
+    },
+    {
+        title: "In Progress",
+        type: "sparkline",
+        source: Source.TRELLO,
+        subSource: "total_time_in_list",
+        series: [{id: "in_progress"}],
+        since: {
+            value: 3,
+            units: "days"
+        }
+    },
+    {
+        title: "mi on bike",
+        type: "sparkline",
+        source: Source.STRAVA,
+        subSource: "allTime",
+        series: [{id: "distance"}],
+        since: {
+            value: 1,
+            units: "weeks"
+        }
+    },
+    {
+        title: "Twitter",
+        subTitle: "Profile",
+        type: "area",
+        source: Source.TWITTER,
+        subSource: "profile",
+        series: [
+            {
+                name: "Followers",
+                defaultVisible: true,
+                id: "followers"
+            },
+            {
+                name: "Following",
+                id: "following"
+            },
+            {
+                name: "Tweets",
+                id: "tweets"
+            },
+            {
+                name: "Lists",
+                id: "lists"
+            }
+        ]
+    }
+];
+
+app.get("/charts", async (req, res) => {
+    res.send({charts});
+    debug("Getting charts", {
+        route: "/charts",
+        location: "route",
+        charts
     });
 });
 

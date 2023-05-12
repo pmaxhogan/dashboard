@@ -2,7 +2,8 @@ import prodConfig from "../prodConfig.js";
 import fetch from "node-fetch";
 import {debug} from "firebase-functions/logger";
 import oauthSuccess from "../oauthSuccess.js";
-import {Source, StatSource} from "../StatSource.js";
+import {StatSource} from "../StatSource.js";
+import {Source} from "../chart.js";
 
 prodConfig();
 

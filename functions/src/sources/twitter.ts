@@ -1,11 +1,12 @@
 import prodConfig from "../prodConfig.js";
-import {Source, StatSource} from "../StatSource.js";
+import {StatSource} from "../StatSource.js";
 import {TwitterApi} from "twitter-api-v2";
 import {TwitterApiAutoTokenRefresher} from "@twitter-api-v2/plugin-token-refresher";
 import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
 import {getOauthDb} from "../db.js";
 import {debug, error} from "firebase-functions/logger";
 import oauthSuccess from "../oauthSuccess.js";
+import {Source} from "../chart.js";
 
 prodConfig();
 

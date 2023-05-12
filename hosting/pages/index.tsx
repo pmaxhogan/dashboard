@@ -1,24 +1,23 @@
 import useSWR from "swr";
 import {apiToken, fetchApi, fetcher} from "../lib/fetcher";
 import React, {useEffect} from "react";
-import Source from "../components/source";
 import SourceButton from "../components/sourcebutton";
-import {titleCase} from "../lib/chartUtils";
-import Sparkline from "../components/sparkline";
+import ChartGraph, {Chart} from "../components/ChartGraph";
 
 const refreshInterval = 1000 * 60 * 10;
-const DEFAULT_AGGREGATE = 100;
+const aggregate = 100;
 
 export default function IndexPage() {
-    const {data: sourcesData, error: sourcesError} = useSWR(`/sources?apiKey=${apiToken}`, fetcher);
-    const [forceUpdateHack, setForceUpdateHack] = React.useState(false);
-    const [aggregate, setAggregate] = React.useState<number|null>(DEFAULT_AGGREGATE);
+    const {data: sourcesData, error: sourcesError} = useSWR(`/sources`, fetcher);
+    const {data: chartsData, error: chartsError} = useSWR(`/charts`, fetcher);
+    if(sourcesError || chartsError) {
+        return <div>failed to load</div>
+    }
+    if(!sourcesData || !chartsData) {
+        return <div>loading...</div>
+    }
 
-    const [chartToSubchartNames, setChartToSubchartNames] = React.useState({});
-    const [chartToSubchartNameToSeries, setChartToSubChartNameToSeries] = React.useState({});
-    const [chartToIsLoading, setChartToIsLoading] = React.useState({});
-    const [sinceTime, setSinceTime] = React.useState(1);
-    const [sinceUnits, setSinceUnits] = React.useState(null);
+    const {charts} = chartsData as {charts: Chart[]}
 
 
     const sources = sourcesData?.sources ?? [];
@@ -27,8 +26,11 @@ export default function IndexPage() {
         await fetchApi(`/refresh`, {method: "POST"});
     }
 
+    /*
 
     async function fetchData(source) {
+        const sinceTime = 1;
+        const sinceUnits = null;
         const queryStr = sinceTime && sinceUnits ? `sinceTime=${sinceTime}&sinceUnits=${sinceUnits}` : "";
 
         const {
@@ -78,8 +80,10 @@ export default function IndexPage() {
         return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
     }, [aggregate, sources]);
 
-    if (sourcesError || !sourcesData) return null;
+    */
 
+    if (sourcesError || !sourcesData) return null;
+/*
     const sparklineData = [
         ["twitter.profile.followers", "Followers"],
         ["gmail.inbox.num_unread", "Unread Emails"],
@@ -98,24 +102,18 @@ export default function IndexPage() {
         const series = chartToSubchartNameToSeries[source] && chartToSubchartNameToSeries[source][chart]?.filter(series => series.name === seriesFriendly);
         return series ? <Sparkline series={series} key={name} dataPath={name} friendlyName={friendlyName} isLoading={chartToIsLoading[source]}/> : null;
     });
-
+*/
     return (
         <>
             <button onClick={refresh}>Check for stats update</button>
             {sources.map((source) => (<SourceButton key={source} source={source}/>))}
             <br/>
-            <button onClick={refreshCharts}>Refresh Charts</button>
-            <label>
-                Aggregate?
-                <input type="checkbox" checked={aggregate !== null} onChange={(e) => setAggregate(e.target.checked ? DEFAULT_AGGREGATE : null)}/>
-            </label>
-            {aggregate && <input type="number" value={aggregate} min={10} max={10000} step={10} onChange={(e) => setAggregate(parseInt(e.target.value))}/>}
 
             <div className="sparklines">
-                {sparklines}
+                {charts.filter(chart => chart.type === "sparkline").map(chart => <ChartGraph chart={chart} key={chart.title + ":" + chart.subTitle}/>)}
             </div>
             <div className="panels">
-                {sources.map((source) => (<Source key={source + "-" + forceUpdateHack} source={source} subchartNames={chartToSubchartNames[source]} chartNameToSeries={chartToSubchartNameToSeries[source]} isLoading={chartToIsLoading[source]}/>))}
+                {charts.filter(chart => chart.type !== "sparkline").map(chart => <ChartGraph chart={chart} key={chart.title + ":" + chart.subTitle}/>)}
             </div>
         </>
     )

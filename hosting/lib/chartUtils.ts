@@ -1,4 +1,5 @@
 import {Duration} from "luxon";
+import {Format} from "./chart";
 
 export const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 export function formatDurationMinutes(minutes) {
@@ -17,7 +18,8 @@ export function formatDurationMinutes(minutes) {
 
 export const formatDurationSeconds = (seconds) => formatDurationMinutes(seconds / 60);
 
-
+/*
+TODO: this
 const sourceToFormat: { sources: string[]; format: (value) => string }[] = [
     {
         sources: ["trello.total_time_in_label", "trello.total_time_in_list", "fitbit.sleep", "fitbit.activeminutes"],
@@ -27,28 +29,17 @@ const sourceToFormat: { sources: string[]; format: (value) => string }[] = [
         sources: ["strava.ytd.time", "strava.alltime.time"],
         format: formatDurationSeconds
     }
-];
+];*/
 
-export const getFormatter = (source, subchartName, chartNameToSeries) => (val, obj) => {
-    const {seriesIndex} = obj || {};
-    const searchStrings = [source.toLowerCase(), `${source.toLowerCase()}.${subchartName}`];
-
-    if (seriesIndex) {
-        const seriesName = chartNameToSeries[subchartName][seriesIndex].name;
-        searchStrings.push(`${source.toLowerCase()}.${subchartName}.${seriesName}`.toLowerCase());
+export const getFormatter = (format: Format) => (val, obj) => {
+    switch (format) {
+        case "durationMinutes":
+            return formatDurationMinutes(val);
+        case "durationSeconds":
+            return formatDurationSeconds(val);
+        default:
+            return val && toDecimal(val, 0);
     }
-
-    return getFormatterManual(searchStrings)(val);
-};
-
-export const getFormatterManual = (searchStrings) => (val) => {
-    for (const {sources, format} of sourceToFormat) {
-        if (sources.some(source => searchStrings.includes(source))) {
-            return format(val);
-        }
-    }
-
-    return val && toDecimal(val, 0);
 };
 
 export const toDecimal = (num, places = 2) => parseFloat(num.toFixed(places));

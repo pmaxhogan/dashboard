@@ -1,10 +1,11 @@
 import prodConfig from "../prodConfig.js";
 prodConfig();
-import {Source, StatSource} from "../StatSource.js";
+import {StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import fetch from "node-fetch";
 import {debug, error, warn} from "firebase-functions/logger";
 import {DateTime} from "luxon";
+import {Source} from "../chart.js";
 
 
 /**
