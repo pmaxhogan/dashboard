@@ -96,7 +96,6 @@ export default function IndexPage() {
         const chart = name.split(".")[1];
         const seriesFriendly = titleCase(name.split(".")[2].toLowerCase());
         const series = chartToSubchartNameToSeries[source] && chartToSubchartNameToSeries[source][chart]?.filter(series => series.name === seriesFriendly);
-        console.log(series);
         return series ? <Sparkline series={series} key={name} dataPath={name} friendlyName={friendlyName} isLoading={chartToIsLoading[source]}/> : null;
     });
 
