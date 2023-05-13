@@ -6,7 +6,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "apexcharts": "^3.39.0",
+    "apexcharts": "^3.40.0",
     "luxon": "^3.3.0",
     "next": "^12.3.4",
     "react": "^18.2.0",

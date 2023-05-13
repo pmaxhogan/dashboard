@@ -1,9 +1,9 @@
 import {getFormatter, titleCase} from "../lib/chartUtils";
-import React from "react";
+import React, {useEffect} from "react";
 import useSWR from "swr";
 import {fetcher} from "../lib/fetcher";
 import dynamic from "next/dynamic";
-const ApexCharts = dynamic(() => import("react-apexcharts"), {ssr: false}) as any;
+const ApexChartsComponent = dynamic(() => import("react-apexcharts"), {ssr: false}) as any;
 
 const monochrome = false;
 const aggregate = 300;
@@ -46,22 +46,31 @@ export type Since = {
     units: TimeUnits;
 }
 
-
-const removeEmpty = (obj) => {
-    let newObj = {};
-    Object.keys(obj).forEach((key) => {
-        if (obj[key] === Object(obj[key])) newObj[key] = removeEmpty(obj[key]);
-        else if (obj[key] !== undefined) newObj[key] = obj[key];
-    });
-    return newObj;
-};
-
 export default function ChartGraph({chart}: { chart: Chart }) {
     const isSparkline = chart.type === "sparkline";
     const queryStr = chart.since ? `sinceTime=${chart.since.value}&sinceUnits=${chart.since.units}` : "";
 
     const {data, error} = useSWR(`/stats/${chart.source.toUpperCase()}?${queryStr}&aggregate=true&buckets=${aggregate}`, fetcher);
 
+    const chartId = `chart-${Math.random().toString(36).slice(2)}`;
+
+    useEffect(() => {
+        if(typeof window !== "undefined" && data && !error) {
+            for (const series of chart.series) {
+                if (!series.defaultVisible && series.name) {
+                    const process = () => {
+                        try {
+                            // @ts-ignore
+                            window.ApexCharts.exec(chartId, "hideSeries", [series.name]);
+                        } catch (e) {
+                            window.requestAnimationFrame(process);
+                        }
+                    };
+                    process();
+                }
+            }
+        }
+    });
 
     if (!data || error) {
         return <div>Loading...</div>;
@@ -72,68 +81,37 @@ export default function ChartGraph({chart}: { chart: Chart }) {
         stats: datapoints
     } = data;
 
-    console.log(subCharts, datapoints);
-
     const series = chart.series.map((series, idx) => {
         return {
             name: series.name ?? "",
             data: datapoints.map(point => {
                 if(chart.type === "candlestick") {
+                    if(series.removeNullsAndZeroes && (point.stats[chart.subSource].open ?? 0) === 0) return null;
                     return {
                         x: (new Date(point.timestamp)),
                         y: [point.stats[chart.subSource].open, point.stats[chart.subSource].high, point.stats[chart.subSource].low, point.stats[chart.subSource].close]
                     };
                 }
-                return [point.timestamp, point.stats[chart.subSource][series.id] ?? 0];
-            })
+                const dataPoint = point.stats[chart.subSource][series.id] ?? 0;
+                if(series.removeNullsAndZeroes && dataPoint === 0) return null;
+                return [point.timestamp, dataPoint];
+            }).filter(Boolean)
         }
     });
 
 
-
-
-/*
-        if (chart.source === Source.STOCKS && chart.subSource === "spy") {
-            return {
-                name: "SPY",
-                data: datapoints.map(point => {
-                    return {
-                        x: (new Date(point.timestamp)),
-                        y: [point.stats[name].open, point.stats[name].high, point.stats[name].low, point.stats[name].close]
-                    };
-                })
-            };
-        } else {
-            return subCharts[name].map(series => {
-                return ({
-                    name: titleCase(series),
-                    data: datapoints.map(point => {
-                        return [point.timestamp, point.stats[name][series] ?? 0];
-                    })
-                });
-            })
-        }
-    }, {});
-
-
-*/
-
-
-
-
-
-    let options = {
+    const options = {
         chart: {
             stacked: chart.stacked ?? false,
             height: 350,
             foreColor: "#ccc", // heading colors
-            dropShadow: isSparkline && {
+            dropShadow: isSparkline ? {
                 enabled: true,
                 top: 1,
                 left: 1,
                 blur: 2,
                 opacity: 0.2,
-            },
+            } : false,
             sparkline: isSparkline && { enabled: true },
             zoom: !isSparkline && {
                 type: "x",
@@ -143,7 +121,8 @@ export default function ChartGraph({chart}: { chart: Chart }) {
             toolbar: !isSparkline && {
                 autoSelected: "zoom"
             },
-            background: "#FFFFFF00"
+            background: "#FFFFFF00",
+            id: chartId,
         },
         theme: {
             mode: "dark",
@@ -157,7 +136,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
         stroke: {
             curve: "smooth"
         },
-        colors: isSparkline && ["#fff"],
+        colors: isSparkline ? ["#fff"] : undefined,
         yaxis: isSparkline ? {show:false} : {
             labels: {
                 formatter: getFormatter(chart.format),
@@ -183,7 +162,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
         dataLabels: {
             enabled: false
         },
-        title: !isSparkline && {
+        title: isSparkline ? {} : {
             text: chart.title,
             align: "left",
             style: {
@@ -199,7 +178,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
                 speed: 1000
             }
         },
-        subtitle: chart.subTitle && {
+        subtitle: chart.subTitle ? {} : {
             text: chart.subTitle,
             align: "left",
             style: {
@@ -240,11 +219,22 @@ export default function ChartGraph({chart}: { chart: Chart }) {
         }
     };
 
-    options = removeEmpty(options) as any;
+    const mostRecent = series[0]?.data[series[0].data.length - 1][1];
 
-    console.log("series", options, series);
-
-    return <ApexCharts className="panel" options={options}
-                       series={series}
-                       type={chart.type} height={350}/>;
+    return <div className={"panel" + (isSparkline ? " sparkline" : "")}>
+        {isSparkline && <div>
+            <div className={"count"}>
+                {getFormatter(chart.format)(mostRecent)}
+            </div>
+            <div className={"name"}>
+                {chart.title}
+            </div>
+            <div className={"subtitle"}>
+                ({chart.since.value}{chart.since.units[0]})
+            </div>
+        </div>}
+        <ApexChartsComponent options={options}
+                             series={series}
+                             type={isSparkline ? "line" : chart.type} height={isSparkline ? 100 : 350} id={chartId}/>
+    </div>;
 };

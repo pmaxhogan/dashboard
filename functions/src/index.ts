@@ -103,37 +103,40 @@ const charts:Chart[] = [
         }
     },
     {
-        title: "School Hours",
+        title: "School",
         type: "sparkline",
         source: Source.TRELLO,
         subSource: "total_time_in_label",
-        series: [{id: "school"}],
+        series: [{id: "School"}],
         since: {
             value: 3,
             units: "days"
-        }
+        },
+        format: "durationMinutes"
     },
     {
         title: "Ready",
         type: "sparkline",
         source: Source.TRELLO,
         subSource: "total_time_in_list",
-        series: [{id: "ready"}],
+        series: [{id: "Ready"}],
         since: {
             value: 3,
             units: "days"
-        }
+        },
+        format: "durationMinutes"
     },
     {
         title: "In Progress",
         type: "sparkline",
         source: Source.TRELLO,
         subSource: "total_time_in_list",
-        series: [{id: "in_progress"}],
+        series: [{id: "In Progress"}],
         since: {
             value: 3,
             units: "days"
-        }
+        },
+        format: "durationMinutes"
     },
     {
         title: "mi on bike",

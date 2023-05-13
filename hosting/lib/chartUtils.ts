@@ -1,5 +1,5 @@
 import {Duration} from "luxon";
-import {Format} from "./chart";
+import {Format} from "../components/ChartGraph";
 
 export const titleCase = (str) => str.replaceAll("_", " ").replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
 export function formatDurationMinutes(minutes) {
@@ -31,7 +31,8 @@ const sourceToFormat: { sources: string[]; format: (value) => string }[] = [
     }
 ];*/
 
-export const getFormatter = (format: Format) => (val, obj) => {
+// noinspection JSUnusedLocalSymbols
+export const getFormatter = (format: Format) => (val, obj?) => {
     switch (format) {
         case "durationMinutes":
             return formatDurationMinutes(val);

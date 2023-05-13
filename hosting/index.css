@@ -37,3 +37,7 @@ body {
 .sparkline .count{
     font-size: 40px;
 }
+
+.sparkline .subtitle{
+    font-size: 10px;
+}
