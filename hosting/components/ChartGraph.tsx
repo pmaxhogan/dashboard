@@ -122,6 +122,7 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
     const options = {
         chart: {
             stacked: chart.stacked ?? false,
+            width: 500,
             height: 350,
             foreColor: "#ccc", // heading colors
             dropShadow: isSparkline ? {

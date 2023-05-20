@@ -30,10 +30,11 @@ export default function IndexPage() {
 
     return (
         <>
-            <button className="panel-btn" onClick={() => setRefreshKey(refreshKey + 1)}>Refresh</button>
-            {sources.map((source) => (<SourceButton key={source} source={source}/>))}
-            <button className="panel-btn" onClick={refresh}>Check for stats update</button>
-            <br/>
+            <div className="buttons">
+                <button className="panel-btn" onClick={() => setRefreshKey(refreshKey + 1)}>Refresh</button>
+                {sources.map((source) => (<SourceButton key={source} source={source}/>))}
+                <button className="panel-btn" onClick={refresh}>Check for stats update</button>
+            </div>
 
             <div className="sparklines">
                 {charts.filter(chart => chart.type === "sparkline").map(chart => <ChartGraph refreshKey={refreshKey} chart={chart} key={chart.title + ":" + chart.subTitle}/>)}

@@ -4,12 +4,19 @@ body {
     background-size: 100%;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    padding: 8px;
+    padding: 0;
+}
+
+main{
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .panels{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    min-width: fit-content;
 }
 
 #__next, main, body, html{
