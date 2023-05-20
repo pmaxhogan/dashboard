@@ -23,6 +23,7 @@ export type Chart = {
     series: Series[];
     since?: Since;
     format?: Format;
+    startYAxisAtZero?: boolean;
 };
 
 export type Series = {

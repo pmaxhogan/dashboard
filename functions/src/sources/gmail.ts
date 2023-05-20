@@ -1,5 +1,7 @@
 import prodConfig from "../prodConfig.js";
 import {auth, gmail} from "@googleapis/gmail";
+// eslint-disable-next-line camelcase
+import {drive_v3} from "@googleapis/drive";
 import {StatSource} from "../StatSource.js";
 import {getOauthDb} from "../db.js";
 import type {OAuth2Client} from "google-auth-library";
@@ -29,10 +31,16 @@ const getOauth2Client = () => {
     return _client;
 };
 
-const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
+const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/drive.readonly"];
 
 type GmailStats = {
     num_unread: number;
+}
+
+type DriveStats = {
+    usage: number;
+    driveUsage: number;
+    limit: number;
 }
 
 /**
@@ -77,6 +85,12 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
             num_unread: 0
         } as GmailStats;
 
+        const drive = {
+            usage: 0,
+            driveUsage: 0,
+            limit: 0
+        } as DriveStats;
+
         getOauth2Client().setCredentials(await getCredentials());
 
         const gmailClient = gmail({version: "v1", auth: getOauth2Client()});
@@ -98,10 +112,37 @@ export default new StatSource(1000 * 60 * 5, Source.GMAIL,
             });
         }
 
+        // eslint-disable-next-line camelcase
+        const driveClient = new drive_v3.Drive({auth: getOauth2Client()});
+        const driveStats = await driveClient.about.get({
+            fields: "storageQuota",
+        });
+
+        const driveData = driveStats.data;
+
+
+        debug("Got drive stats", {
+            location: "gmail.refresh",
+            data: driveData,
+        });
+
+        const toMB = (amount: string) => Math.round(parseInt(amount) / 1024 / 1024);
+        if (driveData.storageQuota && driveData.storageQuota.usage && driveData.storageQuota.usageInDrive && driveData.storageQuota.limit) {
+            drive.usage = toMB(driveData.storageQuota.usage);
+            drive.driveUsage = toMB(driveData.storageQuota.usageInDrive);
+            drive.limit = toMB(driveData.storageQuota.limit);
+        } else {
+            error("No storage quota found", {
+                location: "gmail.refresh",
+                driveData
+            });
+        }
+
         return {
             stats: {
-                inbox: stats
-            }
+                inbox: stats,
+                drive
+            },
         };
     },
     async (req, res) => {

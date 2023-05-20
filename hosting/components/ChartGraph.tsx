@@ -32,6 +32,7 @@ export type Chart = {
     series: Series[];
     since?: Since;
     format?: Format;
+    startYAxisAtZero?: boolean;
 };
 
 export type Series = {
@@ -92,7 +93,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
                         y: [point.stats[chart.subSource].open, point.stats[chart.subSource].high, point.stats[chart.subSource].low, point.stats[chart.subSource].close]
                     };
                 }
-                const dataPoint = point.stats[chart.subSource][series.id] ?? 0;
+                const dataPoint = (point?.stats && point?.stats[chart.subSource]&& point?.stats[chart.subSource][series.id]) ?? 0;
                 if(series.removeNullsAndZeroes && dataPoint === 0) return null;
                 return [point.timestamp, dataPoint];
             }).filter(Boolean).filter((data, idx, arr) => {
@@ -149,6 +150,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
                 },
                 minWidth: 40,
             },
+            min: chart.startYAxisAtZero ? 0 : undefined,
         },
         xaxis: {
             type: "datetime",
@@ -222,7 +224,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
     };
 
     const mostRecentData = series[0]?.data[series[0].data.length - 1];
-    if(!mostRecentData) return <div>No data</div>;
+    if(!mostRecentData) return null;
     const mostRecent = mostRecentData[1];
 
     return <div className={"panel" + (isSparkline ? " sparkline" : "")}>

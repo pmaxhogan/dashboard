@@ -136,6 +136,31 @@ const gmail:Chart[] = [
                 id: "num_unread"
             }
         ]
+    },
+    {
+        title: "Drive",
+        subTitle: "Usage (MB)",
+        type: "area",
+        source: Source.GMAIL,
+        subSource: "drive",
+        series: [
+            {
+                name: "Usage",
+                defaultVisible: true,
+                id: "usage"
+            },
+            {
+                name: "Usage, Drive",
+                defaultVisible: true,
+                id: "driveUsage"
+            },
+            {
+                name: "Limit",
+                defaultVisible: true,
+                id: "limit"
+            },
+        ],
+        startYAxisAtZero: true
     }
 ];
 const fitbit:Chart[] = [
