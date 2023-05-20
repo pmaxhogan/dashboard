@@ -3,6 +3,7 @@ import React, {useEffect} from "react";
 import useSWR from "swr";
 import {fetcher} from "../lib/fetcher";
 import dynamic from "next/dynamic";
+import LoadingBar from "./LoadingBar";
 const ApexChartsComponent = dynamic(() => import("react-apexcharts"), {ssr: false}) as any;
 
 const monochrome = false;
@@ -76,7 +77,20 @@ export default function ChartGraph({chart}: { chart: Chart }) {
     });
 
     if (!data || error) {
-        return <div>Loading...</div>;
+        return <div className={"panel" + (isSparkline ? " sparkline" : "")}>
+            {isSparkline && <div className="sidebar-left-side">
+                <div className={"count"}>
+                    ??
+                </div>
+                <div className={"name"}>
+                    {chart.title}
+                </div>
+                <div className={"subtitle"}>
+                    ({chart.since.value}{chart.since.units[0]})
+                </div>
+            </div>}
+        <LoadingBar/>
+    </div>;
     }
 
     const {

@@ -174,16 +174,19 @@ const gmail:Chart[] = [
             {
                 name: "Usage",
                 defaultVisible: true,
+                removeNullsAndZeroes: true,
                 id: "usage"
             },
             {
                 name: "Usage, Drive",
                 defaultVisible: true,
+                removeNullsAndZeroes: true,
                 id: "driveUsage"
             },
             {
                 name: "Limit",
                 defaultVisible: true,
+                removeNullsAndZeroes: true,
                 id: "limit"
             },
         ],
