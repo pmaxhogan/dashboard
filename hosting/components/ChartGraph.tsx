@@ -224,7 +224,9 @@ export default function ChartGraph({chart}: { chart: Chart }) {
         }
     };
 
-    const mostRecent = series[0]?.data[series[0].data.length - 1][1];
+    const mostRecentData = series[0]?.data[series[0].data.length - 1];
+    if(!mostRecentData) return <div>No data</div>;
+    const mostRecent = mostRecentData[1];
 
     return <div className={"panel" + (isSparkline ? " sparkline" : "")}>
         {isSparkline && <div>
