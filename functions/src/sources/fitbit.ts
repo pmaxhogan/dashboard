@@ -175,7 +175,19 @@ async function refresh() {
             refresh_token: (await getLoginCredentials()).refreshToken
         }).toString()
     });
-    const json = await req.json() as { access_token: string, refresh_token: string };
+
+    const json = await req.json() as {
+        errors?: any[];
+        access_token: string, refresh_token: string };
+
+    if (json.errors && json.errors.length > 0) {
+        error("refresh error", {
+            location: "fitbit.refresh",
+            json
+        });
+        return;
+    }
+
     debug("refresh", {
         location: "fitbit.refresh",
         json
