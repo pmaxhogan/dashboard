@@ -19,6 +19,10 @@ main{
     min-width: fit-content;
 }
 
+.buttons{
+    margin: 8px;
+}
+
 #__next, main, body, html{
     width: 100%;
     height: 100%;
@@ -47,6 +51,7 @@ main:has(.main-loader){
 .panel-btn{
     color: white;
     cursor: pointer;
+    margin: 4px
 }
 
 @keyframes fadeIn {
