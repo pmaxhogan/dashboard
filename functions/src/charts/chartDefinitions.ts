@@ -120,7 +120,34 @@ const twitter:Chart[] = [
                 id: "lists"
             }
         ]
-    }
+    },
+    {
+        title: "Twitter Deltas",
+        subTitle: "Profile",
+        type: "area",
+        source: Source.TWITTER,
+        subSource: "profile",
+        delta: true,
+        series: [
+            {
+                name: "Followers",
+                defaultVisible: true,
+                id: "followers"
+            },
+            {
+                name: "Following",
+                id: "following"
+            },
+            {
+                name: "Tweets",
+                id: "tweets"
+            },
+            {
+                name: "Lists",
+                id: "lists"
+            }
+        ]
+    },
 ];
 const gmail:Chart[] = [
     {

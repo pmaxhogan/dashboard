@@ -33,6 +33,7 @@ export type Chart = {
     since?: Since;
     format?: Format;
     startYAxisAtZero?: boolean;
+    delta?: boolean;
 };
 
 export type Series = {
@@ -49,7 +50,8 @@ export type Since = {
 
 export default function ChartGraph({chart}: { chart: Chart }) {
     const isSparkline = chart.type === "sparkline";
-    const queryStr = chart.since ? `sinceTime=${chart.since.value}&sinceUnits=${chart.since.units}` : "";
+    let queryStr = chart.since ? `sinceTime=${chart.since.value}&sinceUnits=${chart.since.units}` : "";
+    if(chart.delta) queryStr += "&delta=true";
 
     const {data, error} = useSWR(`/stats/${chart.source.toUpperCase()}?${queryStr}&aggregate=true&buckets=${aggregate}`, fetcher);
 

@@ -78,6 +78,7 @@ app.delete("/stats/:source", async (req, res) => {
 app.get("/stats/:source", async (req, res) => {
     const db = await getDb();
     const aggregate = req.query.aggregate === "true";
+    const delta = req.query.delta === "true";
     const buckets = aggregate ? parseInt(req.query.buckets as string) || 200 : 0;
     const sinceTime = req.query.sinceTime ? parseInt(req.query.sinceTime as string) : 0;
     const sinceUnits = req.query.sinceUnits as string;
@@ -88,6 +89,7 @@ app.get("/stats/:source", async (req, res) => {
         location: "route",
         source,
         aggregate,
+        delta,
         buckets,
         sinceTime,
         sinceUnits
@@ -99,7 +101,7 @@ app.get("/stats/:source", async (req, res) => {
         return;
     }
 
-    let results: any;
+    let results: any[];
     if (aggregate) {
         const latest = await latestStats(source);
 
@@ -146,7 +148,7 @@ app.get("/stats/:source", async (req, res) => {
             });
         }
 
-        const pipeline = [
+        let pipeline = [
             ...pipelineStart,
             {
                 $sample: {
@@ -161,6 +163,38 @@ app.get("/stats/:source", async (req, res) => {
                 }
             }
         ];
+
+        if (delta) {
+            pipeline = [
+                ...pipelineStart,
+                {
+                    $sort: {timestamp: -1}
+                },
+                {
+                    $group: {
+                        _id: {$dateToString: {format: "%Y-%m-%d", date: "$timestamp"}},
+                        lastDocument: {$first: "$$ROOT"}
+                    }
+                },
+                {
+                    $project: {
+                        _id: "$lastDocument.timestamp",
+                        date: "$_id",
+                        stats: "$lastDocument.stats",
+                        timestamp: "$lastDocument.timestamp",
+                        metadata: "$lastDocument.metadata",
+                    }
+                },
+                {
+                    $sort: {
+                        "timestamp": 1
+                    }
+                },
+                {
+                    $project: outputObject
+                }
+            ];
+        }
 
         debug("Running aggregate pipeline", {
             route: "/stats/:source",
@@ -183,7 +217,7 @@ app.get("/stats/:source", async (req, res) => {
                 if (!stats[sourceKey]) stats[sourceKey] = {};
                 stats[sourceKey][subKey] = value;
             }
-            return {stats: {stats}, timestamp: result._id.min};
+            return {stats: {stats}, timestamp: result._id.min ?? result._id};
         });
     } else {
         results = await db.collection(source.toLowerCase()).find({}).sort({timestamp: -1}).toArray();
@@ -194,7 +228,28 @@ app.get("/stats/:source", async (req, res) => {
         });
     }
 
-    const stats = results.map((result: any) => ({stats: result.stats.stats, timestamp: result.timestamp}));
+    const resultsCloned = JSON.parse(JSON.stringify(results));
+
+    const stats = results.map((result: any, idx, results: any)=> {
+        const stats = result.stats.stats;
+        if (delta) {
+            Object.entries(stats).forEach(([key, value]: [string, any]) => {
+                if (!value) return;
+                Object.entries(value).forEach(([subKey, subValue]: [string, any]) => {
+                    if (idx === 0) {
+                        stats[key][subKey] = 0;
+                        return;
+                    }
+                    const previous = resultsCloned[idx - 1].stats.stats[key][subKey];
+                    stats[key][subKey] = (subValue ?? 0) - (previous ?? 0);
+                });
+            });
+        }
+        return ({
+            stats,
+            timestamp: result.timestamp
+        });
+    });
 
     const series = results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
         if (key === "_id") return acc;

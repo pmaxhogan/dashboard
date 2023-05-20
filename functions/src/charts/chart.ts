@@ -24,6 +24,7 @@ export type Chart = {
     since?: Since;
     format?: Format;
     startYAxisAtZero?: boolean;
+    delta?: boolean;
 };
 
 export type Series = {
