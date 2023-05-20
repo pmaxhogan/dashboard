@@ -60,7 +60,7 @@ main:has(.main-loader){
 }
 
 .panel:not(.sparkline){
-    min-height: 350px;
+    min-height: 365px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -80,6 +80,7 @@ main:has(.main-loader){
     align-items: center;
     font-family: "Roboto", sans-serif;
     color: #cccccc;
+    height: 125px;
 }
 
 .sparkline .count{

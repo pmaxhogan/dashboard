@@ -7,7 +7,6 @@ import LoadingBar from "./LoadingBar";
 const ApexChartsComponent = dynamic(() => import("react-apexcharts"), {ssr: false}) as any;
 
 const monochrome = false;
-const aggregate = 300;
 
 export type ChartType = "area" | "bar" | "candlestick" | "sparkline";
 export type TimeUnits = "" | "minutes" | "hours" | "days" | "weeks" | "months" | "years";
@@ -51,6 +50,7 @@ export type Since = {
 
 export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }) {
     const isSparkline = chart.type === "sparkline";
+    const aggregate = isSparkline ? 100 : 300;
     let queryStr = chart.since ? `sinceTime=${chart.since.value}&sinceUnits=${chart.since.units}` : "";
     if(chart.delta) queryStr += "&delta=true";
 
