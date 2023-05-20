@@ -3,7 +3,7 @@ import {StatSource} from "../StatSource.js";
 import fetch from "node-fetch";
 import {debug, info} from "firebase-functions/logger";
 import oauthSuccess from "../oauthSuccess.js";
-import {Source} from "../chart.js";
+import {Source} from "../charts/chart.js";
 
 prodConfig();
 

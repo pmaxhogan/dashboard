@@ -1,7 +1,7 @@
 import {getDb} from "./db.js";
 import prodConfig from "./prodConfig.js";
 import {debug, error, info, warn} from "firebase-functions/logger";
-import {Source} from "./chart";
+import {Source} from "./charts/chart";
 
 prodConfig();
 
@@ -36,8 +36,8 @@ export class StatSource {
      * @param {number} refreshFrequency
      * @param {Source} source
      * @param {RefreshFunction} refresh
-     * @param {(req: any, res: any) => Promise<any>} loginFunction
-     * @param {(req: any, res: any) => Promise<any>} callbackFunction
+     * @param {any} loginFunction
+     * @param {any} callbackFunction
      */
     constructor(public refreshFrequency: number, public source: Source, public refresh: RefreshFunction,
                 public loginFunction: (req: any, res: any) => Promise<any>,

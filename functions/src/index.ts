@@ -15,7 +15,8 @@ import cors from "cors";
 import {deleteAll, StatSource} from "./StatSource.js";
 import {getDb} from "./db.js";
 import {DateTime, Duration} from "luxon";
-import {Chart, Source} from "./chart.js";
+import {Source} from "./charts/chart.js";
+import {charts} from "./charts/chartDefinitions.js";
 
 prodConfig();
 
@@ -57,130 +58,10 @@ app.get("/sources", async (req, res) => {
     });
 });
 
-const charts:Chart[] = [
-    {
-        title: "Followers",
-        type: "sparkline",
-        source: Source.TWITTER,
-        subSource: "profile",
-        series: [{id: "followers"}],
-        since: {
-            value: 1,
-            units: "weeks"
-        }
-    },
-    {
-        title: "Unread Emails",
-        type: "sparkline",
-        source: Source.GMAIL,
-        subSource: "inbox",
-        series: [{id: "num_unread"}],
-        since: {
-            value: 3,
-            units: "days"
-        }
-    },
-    {
-        title: "°F",
-        type: "sparkline",
-        source: Source.WEATHER,
-        subSource: "temp",
-        series: [{id: "temp"}],
-        since: {
-            value: 1,
-            units: "days"
-        }
-    },
-    {
-        title: "mph wind",
-        type: "sparkline",
-        source: Source.WEATHER,
-        subSource: "wind",
-        series: [{id: "speed"}],
-        since: {
-            value: 1,
-            units: "days"
-        }
-    },
-    {
-        title: "School",
-        type: "sparkline",
-        source: Source.TRELLO,
-        subSource: "total_time_in_label",
-        series: [{id: "School"}],
-        since: {
-            value: 3,
-            units: "days"
-        },
-        format: "durationMinutes"
-    },
-    {
-        title: "Ready",
-        type: "sparkline",
-        source: Source.TRELLO,
-        subSource: "total_time_in_list",
-        series: [{id: "Ready"}],
-        since: {
-            value: 3,
-            units: "days"
-        },
-        format: "durationMinutes"
-    },
-    {
-        title: "In Progress",
-        type: "sparkline",
-        source: Source.TRELLO,
-        subSource: "total_time_in_list",
-        series: [{id: "In Progress"}],
-        since: {
-            value: 3,
-            units: "days"
-        },
-        format: "durationMinutes"
-    },
-    {
-        title: "mi on bike",
-        type: "sparkline",
-        source: Source.STRAVA,
-        subSource: "allTime",
-        series: [{id: "distance"}],
-        since: {
-            value: 1,
-            units: "weeks"
-        }
-    },
-    {
-        title: "Twitter",
-        subTitle: "Profile",
-        type: "area",
-        source: Source.TWITTER,
-        subSource: "profile",
-        series: [
-            {
-                name: "Followers",
-                defaultVisible: true,
-                id: "followers"
-            },
-            {
-                name: "Following",
-                id: "following"
-            },
-            {
-                name: "Tweets",
-                id: "tweets"
-            },
-            {
-                name: "Lists",
-                id: "lists"
-            }
-        ]
-    }
-];
-
 app.get("/charts", async (req, res) => {
     res.send({charts});
-    debug("Getting charts", {
-        route: "/charts",
+    debug("Getting chartDefinitions", {
+        route: "/chartDefinitions",
         location: "route",
         charts
     });
@@ -417,8 +298,6 @@ async function checkAndRefresh(statSource: StatSource) {
 
 const acceptableTimeVariance = 1000 * 10;
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 for (const statSource of statSources) {
     statSource.setupRoutes(app);
 }
@@ -438,24 +317,12 @@ async function checkForUpdates() {
     }
 
     for (const statSource of statSources) {
-        let timeUntilNext = await checkAndRefresh(statSource);
+        const timeUntilNext = await checkAndRefresh(statSource);
         debug(`Source ${statSource.source} next update in ${timeUntilNext / 1000} seconds`, {
             location: "checkForUpdates",
             source: statSource.source,
             timeUntilNext
         });
-        setTimeout(async () => {
-            // noinspection InfiniteLoopJS
-            while (true) { // eslint-disable-line no-constant-condition
-                timeUntilNext = await checkAndRefresh(statSource);
-                debug(`Source ${statSource.source} next update in ${timeUntilNext / 1000} seconds`, {
-                    location: "checkForUpdates",
-                    source: statSource.source,
-                    timeUntilNext
-                });
-                await sleep(timeUntilNext);
-            }
-        }, timeUntilNext);
     }
 }
 

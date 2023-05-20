@@ -5,7 +5,7 @@ import {getOauthDb} from "../db.js";
 import type {OAuth2Client} from "google-auth-library";
 import {debug, error} from "firebase-functions/logger";
 import oauthSuccess from "../oauthSuccess.js";
-import {Source} from "../chart.js";
+import {Source} from "../charts/chart.js";
 
 prodConfig();
 

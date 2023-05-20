@@ -83,7 +83,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
 
     const series = chart.series.map((series, idx) => {
         return {
-            name: series.name ?? "",
+            name: series.name ?? (chart.series.length > 1 ? series.id ?? "" : ""),
             data: datapoints.map(point => {
                 if(chart.type === "candlestick") {
                     if(series.removeNullsAndZeroes && (point.stats[chart.subSource].open ?? 0) === 0) return null;
@@ -95,9 +95,14 @@ export default function ChartGraph({chart}: { chart: Chart }) {
                 const dataPoint = point.stats[chart.subSource][series.id] ?? 0;
                 if(series.removeNullsAndZeroes && dataPoint === 0) return null;
                 return [point.timestamp, dataPoint];
-            }).filter(Boolean)
+            }).filter(Boolean).filter((data, idx, arr) => {
+                if(chart.type !== "candlestick") return true;
+                if(arr.findIndex((item) => (new Date(item.x)).toLocaleDateString() === (new Date(data.x)).toLocaleDateString()) === idx) return true;
+            })
         }
     });
+
+    console.log(series);
 
 
     const options = {
@@ -178,7 +183,7 @@ export default function ChartGraph({chart}: { chart: Chart }) {
                 speed: 1000
             }
         },
-        subtitle: chart.subTitle ? {} : {
+        subtitle: {
             text: chart.subTitle,
             align: "left",
             style: {

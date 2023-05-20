@@ -6,7 +6,7 @@ import {UserV2} from "twitter-api-v2/dist/esm/types/v2/user.v2.types";
 import {getOauthDb} from "../db.js";
 import {debug, error} from "firebase-functions/logger";
 import oauthSuccess from "../oauthSuccess.js";
-import {Source} from "../chart.js";
+import {Source} from "../charts/chart.js";
 
 prodConfig();
 

@@ -105,3 +105,4 @@ dist
 .tern-port
 /todo.md
 /.firebase/
+/functions/src/charts/trelloChartDefinitions.ts
