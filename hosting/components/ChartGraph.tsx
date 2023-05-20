@@ -102,9 +102,6 @@ export default function ChartGraph({chart}: { chart: Chart }) {
         }
     });
 
-    console.log(series);
-
-
     const options = {
         chart: {
             stacked: chart.stacked ?? false,
