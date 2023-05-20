@@ -8,7 +8,7 @@ export default function SourceButton({source}) {
     }
 
     return <>
-        <button onClick={authorize}>Authorize {source.toLowerCase()}</button>
+        <button className="panel-btn" onClick={authorize}>Authorize {source.toLowerCase()}</button>
     </>;
 }
 

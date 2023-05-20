@@ -49,7 +49,7 @@ export type Since = {
     units: TimeUnits;
 }
 
-export default function ChartGraph({chart}: { chart: Chart }) {
+export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }) {
     const isSparkline = chart.type === "sparkline";
     let queryStr = chart.since ? `sinceTime=${chart.since.value}&sinceUnits=${chart.since.units}` : "";
     if(chart.delta) queryStr += "&delta=true";
