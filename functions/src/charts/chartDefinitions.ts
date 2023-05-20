@@ -222,6 +222,21 @@ const fitbit:Chart[] = [
     },
     {
         title: "Fitbit",
+        subTitle: "Calories",
+        type: "area",
+        source: Source.FITBIT,
+        subSource: "calories",
+        series: [
+            {
+                name: "Calories",
+                defaultVisible: true,
+                removeNullsAndZeroes: true,
+                id: "caloriesValue"
+            }
+        ]
+    },
+    {
+        title: "Fitbit",
         subTitle: "Sleep Breathing Rate",
         type: "area",
         source: Source.FITBIT,
