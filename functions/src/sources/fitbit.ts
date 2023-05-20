@@ -51,6 +51,9 @@ type FitbitStats = {
     };
     activeMinutes: ActiveMinutesValues;
     hrvValues: HrvValues;
+    calories: {
+        caloriesValue: number;
+    };
 }
 
 const callbackUri = `${process.env.API_BASE}/callback/fitbit?apiKey=${process.env.NEXT_PUBLIC_API_KEY}`;
@@ -226,7 +229,8 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             `${baseStr}/hrv/date/${dateStr}.json`,
             `${baseStr}/temp/skin/date/${dateStr}.json`,
             `${baseStr}/activities/heart/date/${dateStr}/1d.json`,
-            `${baseStr}/sleep/date/${dateStr}.json`
+            `${baseStr}/sleep/date/${dateStr}.json`,
+            `${baseStr}/activities/calories/date/${dateStr}/1d.json`,
         ];
 
         const promises = endpoints.map((endpoint) => fetchRefreshIfNeeded(endpoint, authHeader).then((response) => response.json()));
@@ -241,7 +245,7 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             return null;
         }
 
-        const [breathing, vo2Max, hrv, skinTemp, heart, sleep] = results;
+        const [breathing, vo2Max, hrv, skinTemp, heart, sleep, calories] = results;
 
         debug("fitbit data", {
             location: "fitbit.fetch",
@@ -274,6 +278,8 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
 
         const sleepData = sleep.summary.stages;
 
+        const caloriesValue = calories["activities-calories"][0].value;
+
         const stats = {
             sleep: sleepData,
             sleepBreathing,
@@ -287,7 +293,10 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             rhr: {
                 rhrValue
             },
-            activeMinutes
+            activeMinutes,
+            calories: {
+                caloriesValue
+            }
         } as FitbitStats;
 
         debug("fitbit stats", {
