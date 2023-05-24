@@ -223,7 +223,7 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
             },
             x: {
                 formatter: function (val) {
-                    return (new Date(val)).toLocaleTimeString()
+                    return (new Date(val)).toLocaleString()
                 }
             }
         },
