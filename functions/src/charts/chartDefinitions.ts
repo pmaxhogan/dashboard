@@ -119,7 +119,11 @@ const twitter:Chart[] = [
                 name: "Lists",
                 id: "lists"
             }
-        ]
+        ],
+        since: {
+            value: 3,
+            units: "weeks"
+        }
     },
     {
         title: "Twitter Deltas",
@@ -146,7 +150,11 @@ const twitter:Chart[] = [
                 name: "Lists",
                 id: "lists"
             }
-        ]
+        ],
+        since: {
+            value: 3,
+            units: "weeks"
+        }
     },
 ];
 const gmail:Chart[] = [
@@ -162,7 +170,11 @@ const gmail:Chart[] = [
                 defaultVisible: true,
                 id: "num_unread"
             }
-        ]
+        ],
+        since: {
+            value: 2,
+            units: "weeks"
+        }
     },
     {
         title: "Drive",
@@ -549,7 +561,11 @@ const weather:Chart[] = [
                 removeNullsAndZeroes: true,
                 id: "feels_like"
             }
-        ]
+        ],
+        since: {
+            value: 1,
+            units: "weeks"
+        }
     },
     {
         title: "Weather",
@@ -576,7 +592,11 @@ const weather:Chart[] = [
                 defaultVisible: false,
                 id: "deg"
             }
-        ]
+        ],
+        since: {
+            value: 1,
+            units: "weeks"
+        }
     },
 ];
 
