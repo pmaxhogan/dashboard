@@ -233,9 +233,11 @@ export default new StatSource(1000 * 60 * 60 * 24 - (1000 * 60), Source.FITBIT,
             `${baseStr}/activities/calories/date/${dateStr}/1d.json`,
         ];
 
-        const promises = endpoints.map((endpoint) => fetchRefreshIfNeeded(endpoint, authHeader).then((response) => response.json()));
+        const results = [];
 
-        const results = await Promise.all(promises);
+        for (const endpoint of endpoints) {
+            results.push(await fetchRefreshIfNeeded(endpoint, authHeader).then((response) => response.json()));
+        }
 
         if (results.some((result) => result.success === false)) {
             error("fitbit data failed", {
