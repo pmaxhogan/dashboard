@@ -171,7 +171,7 @@ app.get("/stats/:source", async (req, res) => {
                 sinceUnits
             });
         } else {
-            start = (await db.collection(source).find().sort({timestamp: 1}).limit(1).map((doc) => doc.timestamp).next()) as Date;
+            start = (await db.collection(source.toLowerCase()).find().sort({timestamp: 1}).limit(1).toArray())[0].timestamp;
         }
 
         let pipeline = [
@@ -189,7 +189,7 @@ app.get("/stats/:source", async (req, res) => {
                 // }
                 $bucket: {
                     groupBy: "$timestamp",
-                    boundaries: generateBoundaries(buckets, start, new Date()),
+                    boundaries: generateBoundaries(buckets, start as Date, new Date()),
                     output: outputObject
                 }
             }
@@ -238,7 +238,6 @@ app.get("/stats/:source", async (req, res) => {
             location: "route",
             results: aggregateResult.length
         });
-        debug("res", {first: aggregateResult[0], last: aggregateResult[aggregateResult.length - 1]});
 
         results = aggregateResult.map((result) => {
             const stats = {} as any;
