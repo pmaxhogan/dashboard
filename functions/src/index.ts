@@ -75,6 +75,29 @@ app.delete("/stats/:source", async (req, res) => {
     await deleteAll(req.params.source);
 });
 
+/**
+ * Chatgpt made this lol
+ * @param {number} numBuckets - number of buckets to generate
+ * @param {Date} startDate - start date
+ * @param {Date} endDate - end date
+ * @return {Date[]} bucket ranges
+ */
+function generateBoundaries(numBuckets:number, startDate:Date, endDate:Date) {
+    const boundaries = [];
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const interval = Math.floor(timeDiff / numBuckets);
+
+    for (let i = 0; i < numBuckets; i++) {
+        const boundary = new Date(startDate.getTime() + i * interval);
+        boundaries.push(boundary);
+    }
+
+    boundaries.push(endDate);
+
+    return boundaries;
+}
+
+
 app.get("/stats/:source", async (req, res) => {
     const db = await getDb();
     const aggregate = req.query.aggregate === "true";
@@ -125,8 +148,9 @@ app.get("/stats/:source", async (req, res) => {
 
         let pipelineStart: any[] = [];
 
+        let start: Date | undefined = undefined;
         if (sinceTime && sinceUnits) {
-            const start = DateTime.now().minus(Duration.fromObject({[sinceUnits]: sinceTime})).toJSDate();
+            start = DateTime.now().minus(Duration.fromObject({[sinceUnits]: sinceTime})).toJSDate();
 
             pipelineStart = [
                 {
@@ -146,6 +170,8 @@ app.get("/stats/:source", async (req, res) => {
                 sinceTime,
                 sinceUnits
             });
+        } else {
+            start = (await db.collection(source).find().sort({timestamp: 1}).limit(1).map((doc) => doc.timestamp).next()) as Date;
         }
 
         let pipeline = [
@@ -156,9 +182,14 @@ app.get("/stats/:source", async (req, res) => {
                 }
             },
             {
-                $bucketAuto: {
+                // $bucketAuto: {
+                //     groupBy: "$timestamp",
+                //     buckets: buckets,
+                //     output: outputObject
+                // }
+                $bucket: {
                     groupBy: "$timestamp",
-                    buckets: buckets,
+                    boundaries: generateBoundaries(buckets, start, new Date()),
                     output: outputObject
                 }
             }
@@ -173,7 +204,7 @@ app.get("/stats/:source", async (req, res) => {
                 {
                     $group: {
                         _id: {$dateToString: {format: "%Y-%m-%d", date: "$timestamp"}},
-                        lastDocument: {$first: "$$ROOT"}
+                        lastDocument: {$last: "$$ROOT"}
                     }
                 },
                 {
@@ -207,6 +238,7 @@ app.get("/stats/:source", async (req, res) => {
             location: "route",
             results: aggregateResult.length
         });
+        debug("res", {first: aggregateResult[0], last: aggregateResult[aggregateResult.length - 1]});
 
         results = aggregateResult.map((result) => {
             const stats = {} as any;
