@@ -157,6 +157,25 @@ const twitter:Chart[] = [
         }
     },
 ];
+const tscraper:Chart[] = ["Replies", "Retweets", "Likes", "Views"].map((type) => {
+    return {
+        title: "Tscraper",
+        subTitle: type,
+        type: "area",
+        source: Source.TSCRAPER,
+        subSource: type.toLowerCase(),
+        series: {
+            name: type,
+            defaultVisible: true,
+            id: type.toLowerCase()
+        },
+        since: {
+            value: 3,
+            units: "weeks"
+        }
+    };
+});
+
 const gmail:Chart[] = [
     {
         title: "Gmail",
@@ -610,30 +629,5 @@ export const charts: Chart[] = [
     ...fitbit,
     ...strava,
     ...weather,
-    /* {
-        title: "Twitter",
-        subTitle: "Profile",
-        type: "area",
-        source: Source.TWITTER,
-        subSource: "profile",
-        series: [
-            {
-                name: "Followers",
-                defaultVisible: true,
-                id: "followers"
-            },
-            {
-                name: "Following",
-                id: "following"
-            },
-            {
-                name: "Tweets",
-                id: "tweets"
-            },
-            {
-                name: "Lists",
-                id: "lists"
-            }
-        ]
-    }*/
+    ...tscraper,
 ];

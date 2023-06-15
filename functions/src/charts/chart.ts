@@ -11,6 +11,7 @@ export enum Source {
     STOCKS = "stocks",
     STRAVA = "strava",
     WEATHER = "weather",
+    TSCRAPER = "tscraper",
 }
 
 export type Chart = {
@@ -20,7 +21,7 @@ export type Chart = {
     stacked?: boolean;
     source: Source;
     subSource: string;
-    series: Series[];
+    series: Series | Series[];
     since?: Since;
     format?: Format;
     startYAxisAtZero?: boolean;

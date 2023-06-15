@@ -9,6 +9,7 @@ import fitbit from "./sources/fitbit.js";
 import stocks from "./sources/stocks.js";
 import strava from "./sources/strava.js";
 import weather from "./sources/weather.js";
+import tscraper from "./sources/tscraper.js";
 
 import express from "express";
 import cors from "cors";
@@ -17,7 +18,6 @@ import {getDb} from "./db.js";
 import {DateTime, Duration} from "luxon";
 import {Source} from "./charts/chart.js";
 import {charts} from "./charts/chartDefinitions.js";
-
 prodConfig();
 
 const app = express();
@@ -317,7 +317,8 @@ const statSources = [
     fitbit,
     stocks,
     strava,
-    weather
+    weather,
+    tscraper
 ];
 
 /**
@@ -412,6 +413,9 @@ async function checkForUpdates() {
     }
 }
 
-export const api = functions.https.onRequest(app);
+export const api = functions.runWith({
+    memory: "1GB",
+    timeoutSeconds: 60 * 3,
+}).https.onRequest(app);
 // noinspection JSUnusedGlobalSymbols
 export const updateStats = functions.pubsub.schedule("every 5 minutes").onRun(checkForUpdates);

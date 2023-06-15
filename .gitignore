@@ -106,3 +106,4 @@ dist
 /todo.md
 /.firebase/
 /functions/src/charts/trelloChartDefinitions.ts
+/functions/src/cannedTweets.ts

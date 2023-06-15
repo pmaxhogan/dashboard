@@ -29,7 +29,7 @@ export type Chart = {
     stacked?: boolean;
     source: Source;
     subSource: string;
-    series: Series[];
+    series: Series | Series[];
     since?: Since;
     format?: Format;
     startYAxisAtZero?: boolean;
@@ -58,9 +58,30 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
 
     const chartId = `chart-${Math.random().toString(36).slice(2)}`;
 
+
+    const isDynamicSeries = !chart.series[0];
+    function getSeries(){
+        if(!isDynamicSeries){
+            return chart.series as Series[];
+        }
+        else if(data && data.stats.length){
+            const subSourceIds = data.series[chart.subSource];
+
+            const singleSeries = chart.series as Series;
+
+            return subSourceIds.map(source => ({
+                ...singleSeries, name: source,
+                id: source
+            })) as Series[];
+        }  else{
+            return [];
+        }
+    }
+
     useEffect(() => {
         if(typeof window !== "undefined" && data && !error) {
-            for (const series of chart.series) {
+            const seriesList = getSeries();
+            for (const series of seriesList) {
                 if (!series.defaultVisible && series.name) {
                     const process = () => {
                         try {
@@ -98,9 +119,10 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
         stats: datapoints
     } = data;
 
-    const series = chart.series.map((series, idx) => {
+
+    const series = getSeries().map((series, idx) => {
         return {
-            name: series.name ?? (chart.series.length > 1 ? series.id ?? "" : ""),
+            name: series.name ?? (getSeries().length > 1 ? series.id ?? "" : ""),
             data: datapoints.map(point => {
                 if(chart.type === "candlestick") {
                     if(series.removeNullsAndZeroes && (point.stats[chart.subSource].open ?? 0) === 0) return null;
@@ -243,6 +265,8 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
     const mostRecentData = series[0]?.data[series[0].data.length - 1];
     if(!mostRecentData) return null;
     const mostRecent = mostRecentData[1];
+
+    getSeries();
 
     return <div className={"panel" + (isSparkline ? " sparkline" : "")}>
         {isSparkline && <div>
