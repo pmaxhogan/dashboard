@@ -11,12 +11,6 @@ export default function prodConfig() {
     if (isProd) {
         for (const key of Object.keys(process.env)) {
             if (key.startsWith("PROD_")) {
-                debug(`prodConfig: ${key}=${process.env[key]}`, {
-                    location: "prodConfig",
-                    key,
-                    value: process.env[key],
-                    replace: key.replace("PROD_", "")
-                });
                 process.env[key.replace("PROD_", "")] = process.env[key];
             }
         }

@@ -7,6 +7,7 @@ import puppeteer, {ElementHandle} from "puppeteer";
 import {DateTime} from "luxon";
 import snowflakeToTime from "../snowlflakeToTime.js";
 import cannedTweets from "../cannedTweets.js";
+import createPasteBin from "../pasteHelper.js";
 
 
 const runShell = async (command: string) => {
@@ -125,160 +126,176 @@ async function fetchTweets() {
             real,
             url
         });
+
+        try {
         // noinspection ES6MissingAwait
-        page.goto(url);
-        debug("tscraper went to page", {
-            location: "tscraper.fetchTweets",
-            debugBrowser,
-            scrollIterations,
-            real,
-            url
-        });
-
-        await page.waitForSelector("[data-testid='primaryColumn']");
-        await page.waitForSelector("[data-testid=\"tweet\"]");
-        debug("tscraper loaded primary column", {
-            location: "tscraper.fetchTweets",
-            debugBrowser,
-            scrollIterations,
-            real,
-            url
-        });
-
-        const checkForCloseButtons = async () => {
-            const closeButtons = await page.$$("[data-testid=\"sheetDialog\"] span");
-            if (closeButtons?.length) {
-                await sleepRandom(200, 600);
-                debug("tscraper closing dialog", {
-                    location: "tscraper.fetchTweets",
-                    debugBrowser,
-                    scrollIterations,
-                    real
-                });
-                await closeButtons[closeButtons.length - 1].click();
-                await sleepRandom(150, 250);
-            }
-        };
-
-
-        tweetsMap = new Map<string, any>();
-
-
-        for (let i = 0; i < scrollIterations; i++) {
-            const tweetElems = await page.$$("[data-testid=\"tweet\"]");
-
-            await checkForCloseButtons();
-
-            debug("tscraper loaded iteration", {
+            page.goto(url);
+            debug("tscraper went to page", {
                 location: "tscraper.fetchTweets",
                 debugBrowser,
                 scrollIterations,
                 real,
-                i,
-                tweetElems: tweetElems.length
+                url
             });
 
-            await Promise.all(tweetElems.map(async (tweet) => {
+            await page.waitForSelector("[data-testid='primaryColumn']");
+            await page.waitForSelector("[data-testid=\"tweet\"]");
+            debug("tscraper loaded primary column", {
+                location: "tscraper.fetchTweets",
+                debugBrowser,
+                scrollIterations,
+                real,
+                url
+            });
+
+            const checkForCloseButtons = async () => {
+                const closeButtons = await page.$$("[data-testid=\"sheetDialog\"] span");
+                if (closeButtons?.length) {
+                    await sleepRandom(200, 600);
+                    debug("tscraper closing dialog", {
+                        location: "tscraper.fetchTweets",
+                        debugBrowser,
+                        scrollIterations,
+                        real
+                    });
+                    await closeButtons[closeButtons.length - 1].click();
+                    await sleepRandom(150, 250);
+                }
+            };
+
+
+            tweetsMap = new Map<string, any>();
+
+
+            for (let i = 0; i < scrollIterations; i++) {
+                const tweetElems = await page.$$("[data-testid=\"tweet\"]");
+
+                await checkForCloseButtons();
+
+                debug("tscraper loaded iteration", {
+                    location: "tscraper.fetchTweets",
+                    debugBrowser,
+                    scrollIterations,
+                    real,
+                    i,
+                    tweetElems: tweetElems.length
+                });
+
+                await Promise.all(tweetElems.map(async (tweet) => {
                 /**
                  * Count the number of replies, retweets, likes, or views next to the icon
                  * @param {ElementHandle} tweet
                  * @param {string} ariaLabel
                  * @return {Promise<number | null>}
                  */
-                async function countNextToIcon(tweet: ElementHandle, ariaLabel: string) {
-                    const content = await tweet.$eval(`[aria-label$="${ariaLabel}"]`, (el) => el.textContent);
+                    async function countNextToIcon(tweet: ElementHandle, ariaLabel: string) {
+                        const content = await tweet.$eval(`[aria-label$="${ariaLabel}"]`, (el) => el.textContent);
 
-                    const result = tryMakeInt(content);
+                        const result = tryMakeInt(content);
 
-                    if (content && result == null) {
-                        console.error(`Could not find ${ariaLabel} from content ${content}`, tweet);
-                        error("Could not find aria label", {
-                            location: "tscraper.fetchTweets",
-                            debugBrowser,
-                            scrollIterations,
-                            real,
-                            i,
-                            tweetElems: tweetElems.length,
-                            content,
-                            ariaLabel
-                        });
+                        if (content && result == null) {
+                            console.error(`Could not find ${ariaLabel} from content ${content}`, tweet);
+                            error("Could not find aria label", {
+                                location: "tscraper.fetchTweets",
+                                debugBrowser,
+                                scrollIterations,
+                                real,
+                                i,
+                                tweetElems: tweetElems.length,
+                                content,
+                                ariaLabel
+                            });
+                        }
+
+                        return result ?? 0;
                     }
 
-                    return result ?? 0;
-                }
+                    if (tweet) {
+                        const hasContext = await tweet.$("[data-testid=\"socialContext\"]");
+                        if (hasContext) return null;
 
-                if (tweet) {
-                    const hasContext = await tweet.$("[data-testid=\"socialContext\"]");
-                    if (hasContext) return null;
+                        const id = await tweet.$eval("time", (el) => {
+                            if (el?.parentElement) {
+                                const href = el.parentElement.getAttribute("href");
 
-                    const id = await tweet.$eval("time", (el) => {
-                        if (el?.parentElement) {
-                            const href = el.parentElement.getAttribute("href");
-
-                            if (href) {
-                                return href.split("/")[3];
+                                if (href) {
+                                    return href.split("/")[3];
+                                }
                             }
-                        }
 
-                        return null;
-                    });
+                            return null;
+                        });
 
 
-                    if (id != null) {
-                        let text;
-                        const fullText = await tweet.$eval("[data-testid=\"tweetText\"]", (el) => el?.textContent);
+                        if (id != null) {
+                            let text;
+                            const fullText = await tweet.$eval("[data-testid=\"tweetText\"]", (el) => el?.textContent);
 
-                        const friendlyDate = idToDate(id);
+                            const friendlyDate = idToDate(id);
 
-                        if (fullText && fullText.trim().length) {
-                            text = fullText.trim().slice(0, 14);
+                            if (fullText && fullText.trim().length) {
+                                text = fullText.trim().slice(0, 14);
+                            } else {
+                                text = friendlyDate;
+                            }
+
+                            const replies = await countNextToIcon(tweet, "Reply");
+                            const retweets = await countNextToIcon(tweet, "Retweet");
+                            const likes = await countNextToIcon(tweet, "Like");
+                            const views = await countNextToIcon(tweet, "View Tweet analytics");
+
+                            const resultObj = {replies, retweets, likes, views};
+
+                            debug("tscraper text for tweet", {
+                                location: "tscraper.fetch.findId",
+                                text,
+                                friendlyDate,
+                                resultObj
+                            });
+
+                            tweetsMap.set(text, resultObj);
                         } else {
-                            text = friendlyDate;
+                            error("Could not find id", {
+                                location: "tscraper.fetchTweets",
+                                debugBrowser,
+                                scrollIterations,
+                                real,
+                                i,
+                                tweetElems: tweetElems.length,
+                                id
+                            });
                         }
-
-                        const replies = await countNextToIcon(tweet, "Reply");
-                        const retweets = await countNextToIcon(tweet, "Retweet");
-                        const likes = await countNextToIcon(tweet, "Like");
-                        const views = await countNextToIcon(tweet, "View Tweet analytics");
-
-                        const resultObj = {replies, retweets, likes, views};
-
-                        debug("tscraper text for tweet", {
-                            location: "tscraper.fetch.findId",
-                            text,
-                            friendlyDate,
-                            resultObj
-                        });
-
-                        tweetsMap.set(text, resultObj);
-                    } else {
-                        error("Could not find id", {
-                            location: "tscraper.fetchTweets",
-                            debugBrowser,
-                            scrollIterations,
-                            real,
-                            i,
-                            tweetElems: tweetElems.length,
-                            id
-                        });
                     }
+
+                    return null;
+                }));
+
+                await sleepRandom(250, 750);
+
+                await checkForCloseButtons();
+
+                if (i < scrollIterations - 1) {
+                    await tweetElems[tweetElems.length - 1].scrollIntoView();
                 }
-
-                return null;
-            }));
-
-            await sleepRandom(250, 750);
-
-            await checkForCloseButtons();
-
-            if (i < scrollIterations - 1) {
-                await tweetElems[tweetElems.length - 1].scrollIntoView();
             }
-        }
 
 
-        if (!debugBrowser) {
-            await browser.close();
+            if (!debugBrowser) {
+                await browser.close();
+            }
+        } catch (e) {
+            const fullHTML = await page.$eval("html", (el) => el?.outerHTML);
+
+            const url = createPasteBin(fullHTML);
+            error("Exception when processing page", {
+                location: "tscraper.fetchTweets",
+                debugBrowser,
+                scrollIterations,
+                real,
+                e,
+                url
+            });
+            throw e;
         }
     } else {
         tweetsMap = new Map<string, never>(cannedTweets as unknown as [string, never][]);

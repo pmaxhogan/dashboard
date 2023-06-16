@@ -413,9 +413,9 @@ async function checkForUpdates() {
     }
 }
 
-export const api = functions.runWith({
-    memory: "1GB",
-    timeoutSeconds: 60 * 3,
-}).https.onRequest(app);
+export const api = functions.https.onRequest(app);
 // noinspection JSUnusedGlobalSymbols
-export const updateStats = functions.pubsub.schedule("every 5 minutes").onRun(checkForUpdates);
+export const updateStats = functions.runWith({
+    memory: "2GB",
+    timeoutSeconds: 60 * 3,
+}).pubsub.schedule("every 5 minutes").onRun(checkForUpdates);
