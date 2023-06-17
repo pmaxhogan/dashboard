@@ -286,14 +286,14 @@ async function fetchTweets() {
         } catch (e) {
             const fullHTML = await page.$eval("html", (el) => el?.outerHTML);
 
-            const url = createPasteBin(fullHTML);
+            const pasteUrl = await createPasteBin(fullHTML);
             error("Exception when processing page", {
                 location: "tscraper.fetchTweets",
                 debugBrowser,
                 scrollIterations,
                 real,
                 e,
-                url
+                pasteUrl
             });
             throw e;
         }
