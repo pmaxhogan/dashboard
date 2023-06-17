@@ -229,31 +229,45 @@ async function fetchTweets() {
 
                         if (id != null) {
                             let text;
-                            const fullText = await tweet.$eval("[data-testid=\"tweetText\"]", (el) => el?.textContent);
+                            try {
+                                const fullText = await tweet.$eval("[data-testid=\"tweetText\"]", (el) => el?.textContent);
 
-                            const friendlyDate = idToDate(id);
+                                const friendlyDate = idToDate(id);
 
-                            if (fullText && fullText.trim().length) {
-                                text = fullText.trim().slice(0, 14);
-                            } else {
-                                text = friendlyDate;
+                                if (fullText && fullText.trim().length) {
+                                    text = fullText.trim().slice(0, 14);
+                                } else {
+                                    text = friendlyDate;
+                                }
+
+                                const replies = await countNextToIcon(tweet, "Reply");
+                                const retweets = await countNextToIcon(tweet, "Retweet");
+                                const likes = await countNextToIcon(tweet, "Like");
+                                const views = await countNextToIcon(tweet, "View Tweet analytics");
+
+                                const resultObj = {replies, retweets, likes, views};
+
+                                debug("tscraper text for tweet", {
+                                    location: "tscraper.fetch.findId",
+                                    text,
+                                    friendlyDate,
+                                    resultObj
+                                });
+
+                                tweetsMap.set(text, resultObj);
+                            } catch (e) {
+                                warn("Exception when processing tweet", {
+                                    location: "tscraper.fetchTweets",
+                                    debugBrowser,
+                                    scrollIterations,
+                                    real,
+                                    i,
+                                    tweetElems: tweetElems.length,
+                                    id,
+                                    text,
+                                    e
+                                });
                             }
-
-                            const replies = await countNextToIcon(tweet, "Reply");
-                            const retweets = await countNextToIcon(tweet, "Retweet");
-                            const likes = await countNextToIcon(tweet, "Like");
-                            const views = await countNextToIcon(tweet, "View Tweet analytics");
-
-                            const resultObj = {replies, retweets, likes, views};
-
-                            debug("tscraper text for tweet", {
-                                location: "tscraper.fetch.findId",
-                                text,
-                                friendlyDate,
-                                resultObj
-                            });
-
-                            tweetsMap.set(text, resultObj);
                         } else {
                             error("Could not find id", {
                                 location: "tscraper.fetchTweets",
