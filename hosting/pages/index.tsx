@@ -4,6 +4,7 @@ import React, {KeyboardEvent, KeyboardEventHandler, useEffect} from "react";
 import SourceButton from "../components/sourcebutton";
 import ChartGraph, {Chart} from "../components/ChartGraph";
 import LoadingBar from "../components/LoadingBar";
+import PlaidLink from "../components/PlaidLink";
 
 
 export default function IndexPage() {
@@ -60,6 +61,7 @@ export default function IndexPage() {
             {showButtons && <div className="buttons">
                 <button className="panel-btn" onClick={refresh}>Refresh</button>
                 {sources.map((source) => (<SourceButton key={source} source={source}/>))}
+                <PlaidLink/>
                 <button className="panel-btn" onClick={updateStats}>Check for stats update</button>
             </div>}
 

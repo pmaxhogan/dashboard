@@ -10,6 +10,7 @@ import stocks from "./sources/stocks.js";
 import strava from "./sources/strava.js";
 import weather from "./sources/weather.js";
 import tscraper from "./sources/tscraper.js";
+import plaid from "./sources/plaid.js";
 
 import express from "express";
 import cors from "cors";
@@ -230,7 +231,7 @@ app.get("/stats/:source", async (req, res) => {
         debug("Running aggregate pipeline", {
             route: "/stats/:source",
             location: "route",
-            pipeline
+            pipeline: JSON.stringify(pipeline).slice(0, 100)
         });
         const aggregateResult = await db.collection(source.toLowerCase()).aggregate(pipeline).toArray();
         debug(`aggregateResult returned Got ${aggregateResult.length} results`, {
@@ -318,7 +319,8 @@ const statSources = [
     stocks,
     strava,
     weather,
-    tscraper
+    tscraper,
+    plaid
 ];
 
 /**
