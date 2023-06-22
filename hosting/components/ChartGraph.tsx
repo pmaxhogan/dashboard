@@ -20,6 +20,7 @@ export enum Source {
     STOCKS = "stocks",
     STRAVA = "strava",
     WEATHER = "weather",
+    TSCRAPER = "tscraper",
 }
 
 export type Chart = {
