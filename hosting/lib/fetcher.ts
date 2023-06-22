@@ -1,4 +1,4 @@
-export const fetcher = (url: string, opts?: any) => fetchApi(url, opts).then((res) => res.json());
+export const fetcher = (url: string) => fetchApi(url).then((res) => res.json());
 export const fetcherMultple = async ({urls}) => {
     const requests = urls.map(url => fetchApi(url));
     const responses = await Promise.all(requests);

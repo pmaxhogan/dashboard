@@ -115,11 +115,6 @@ export class StatSource {
      * @param {any} app The express app
      */
     public setupRoutes(app: any) {
-        debug(`Setting up routes for ${this.source}`, {
-            location: "StatSource.setupRoutes",
-            source: this.source
-        });
-
         app.get(`/login/${this.source}`, async (req: any, res: any) => {
             debug(`Logging in to ${this.source}`, {
                 location: "StatSource.setupRoutes",
