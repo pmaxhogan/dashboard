@@ -8,6 +8,7 @@ import {DateTime} from "luxon";
 import snowflakeToTime from "../snowlflakeToTime.js";
 import cannedTweets from "../cannedTweets.js";
 import createPasteBin from "../pasteHelper.js";
+import {getDb} from "../db.js";
 
 
 const runShell = async (command: string) => {
@@ -67,6 +68,71 @@ type TScraperStats = {
     views: TScraperStat;
 }
 
+type TScraperStatsSingle = {
+    replies: number;
+    retweets: number;
+    likes: number;
+    views: number;
+}
+
+/**
+ * Get the minute bucket for the given minute
+ * @param {number} minutes
+ */
+async function getMinuteBucket(minutes: number) {
+    const db = await getDb();
+    const collection = db.collection("tscraper_relative");
+    return await collection.findOne({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        _id: minutes
+    });
+}
+
+/**
+ * Set the minute bucket data for the given doc
+ * @param {number} minutes
+ * @param {string} docId
+ * @param {TScraperStat} stats
+ */
+async function setMinuteBucket(minutes: number, docId: string, stats: TScraperStatsSingle) {
+    const db = await getDb();
+    const collection = db.collection("tscraper_relative");
+    const existing = await getMinuteBucket(minutes);
+
+    debug("setMinuteBucket", {
+        minutes,
+        docId,
+        stats,
+    });
+
+    // stats.stats.replies.[docId] = value
+    let resultStats = {
+        stats: {}
+    } as {
+        stats: {
+            [key: string]: {
+                [innerKey: string]: number,
+            }
+        }
+    };
+
+    if (existing) resultStats = existing.stats;
+
+    for (const [key, value] of Object.entries(stats)) {
+        if (!resultStats.stats[key]) resultStats.stats[key] = {};
+        resultStats.stats[key][docId] = value;
+    }
+
+    await collection.updateOne({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        _id: minutes
+    }, {$set: {
+        stats: resultStats,
+        timestamp: minutes,
+    }}, {upsert: true});
+}
 
 /**
  * Convert twitter ID to friendly date
@@ -214,6 +280,11 @@ async function fetchTweets() {
                         const hasContext = await tweet.$("[data-testid=\"socialContext\"]");
                         if (hasContext) return null;
 
+                        const timeElem = await tweet.$("time");
+                        if (!timeElem) return null;
+
+                        const dateTime = await timeElem.evaluate((el) => el.getAttribute("datetime"));
+
                         const id = await tweet.$eval("time", (el) => {
                             if (el?.parentElement) {
                                 const href = el.parentElement.getAttribute("href");
@@ -227,7 +298,7 @@ async function fetchTweets() {
                         });
 
 
-                        if (id != null) {
+                        if (id !== null && dateTime !== null && !tweetsMap.has(id)) {
                             let text;
                             try {
                                 const fullText = await tweet.$eval("[data-testid=\"tweetText\"]", (el) => el?.textContent);
@@ -245,7 +316,7 @@ async function fetchTweets() {
                                 const likes = await countNextToIcon(tweet, "Like");
                                 const views = await countNextToIcon(tweet, "View Tweet analytics");
 
-                                const resultObj = {replies, retweets, likes, views};
+                                const resultObj = {replies, retweets, likes, views, dateTime: new Date(dateTime)};
 
                                 debug("tscraper text for tweet", {
                                     location: "tscraper.fetch.findId",
@@ -318,7 +389,7 @@ async function fetchTweets() {
     return tweetsMap;
 }
 
-export default new StatSource(1000 * 60 * 60 - (1000 * 30), Source.TSCRAPER,
+export default new StatSource(1000 * 15 * 60 - (1000 * 30), Source.TSCRAPER,
     async () => {
         const stats = {
             "replies": {} as TScraperStat,
@@ -336,11 +407,22 @@ export default new StatSource(1000 * 60 * 60 - (1000 * 30), Source.TSCRAPER,
         });
 
         if (tweets.size) {
+            const nowReference = Date.now();
+
             for (const [id, tweet] of tweets) {
                 stats.replies[id] = tweet.replies;
                 stats.retweets[id] = tweet.retweets;
                 stats.likes[id] = tweet.likes;
                 stats.views[id] = tweet.views;
+
+                const minutesAgo = Math.floor((nowReference - tweet.dateTime.getTime()) / 1000 / 60);
+
+                await setMinuteBucket(minutesAgo, id, {
+                    replies: tweet.replies,
+                    retweets: tweet.retweets,
+                    likes: tweet.likes,
+                    views: tweet.views
+                });
             }
 
             debug("tscraper stats", {

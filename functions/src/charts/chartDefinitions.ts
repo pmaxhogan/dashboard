@@ -175,6 +175,22 @@ const tscraper:Chart[] = ["Replies", "Retweets", "Likes", "Views"].map((type) =>
         }
     };
 });
+const tscraperRelative:Chart[] = ["Replies", "Retweets", "Likes", "Views"].map((type) => {
+    return {
+        title: "Tscraper Relative",
+        subTitle: type,
+        type: "line",
+        source: Source.TSCRAPER_RELATIVE,
+        subSource: type.toLowerCase(),
+        series: {
+            name: type,
+            defaultVisible: true,
+            removeNullsAndZeroes: true,
+            id: type.toLowerCase()
+        },
+        relativeTime: true,
+    };
+});
 
 const gmail:Chart[] = [
     {
@@ -630,4 +646,5 @@ export const charts: Chart[] = [
     ...strava,
     ...weather,
     ...tscraper,
+    ...tscraperRelative,
 ];

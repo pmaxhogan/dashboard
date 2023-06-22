@@ -1,4 +1,4 @@
-import {getFormatter, titleCase} from "../lib/chartUtils";
+import {formatDurationMinutes, getFormatter, titleCase} from "../lib/chartUtils";
 import React, {useEffect} from "react";
 import useSWR from "swr";
 import {fetcher} from "../lib/fetcher";
@@ -8,7 +8,7 @@ const ApexChartsComponent = dynamic(() => import("react-apexcharts"), {ssr: fals
 
 const monochrome = false;
 
-export type ChartType = "area" | "bar" | "candlestick" | "sparkline";
+export type ChartType = "area" | "bar" | "candlestick" | "sparkline" | "scatter" | "line";
 export type TimeUnits = "" | "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 export type Format = "durationSeconds" | "durationMinutes";
 
@@ -21,6 +21,7 @@ export enum Source {
     STRAVA = "strava",
     WEATHER = "weather",
     TSCRAPER = "tscraper",
+    TSCRAPER_RELATIVE = "tscraper_relative",
 }
 
 export type Chart = {
@@ -35,6 +36,7 @@ export type Chart = {
     format?: Format;
     startYAxisAtZero?: boolean;
     delta?: boolean;
+    relativeTime?: boolean;
 };
 
 export type Series = {
@@ -55,7 +57,7 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
     let queryStr = chart.since ? `sinceTime=${chart.since.value}&sinceUnits=${chart.since.units}` : "";
     if(chart.delta) queryStr += "&delta=true";
 
-    const {data, error} = useSWR(`/stats/${chart.source.toUpperCase()}?${queryStr}&aggregate=true&buckets=${aggregate}`, fetcher);
+    const {data, error} = useSWR(`/stats/${chart.source.toUpperCase()}?${queryStr}&aggregate=true&buckets=${aggregate}&relativeTime=${chart.relativeTime}`, fetcher);
 
     const chartId = `chart-${Math.random().toString(36).slice(2)}`;
 
@@ -67,6 +69,10 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
         }
         else if(data && data.stats.length){
             const subSourceIds = data.series[chart.subSource];
+
+            if(!subSourceIds){
+                console.log("CAPTURE", chart, data);
+            }
 
             const singleSeries = chart.series as Series;
 
@@ -124,20 +130,56 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
     const series = getSeries().map((series, idx) => {
         return {
             name: series.name ?? (getSeries().length > 1 ? series.id ?? "" : ""),
-            data: datapoints.map(point => {
+            data: datapoints.map((point, idx, allPoints) => {
+                const x = chart.relativeTime ? point.timestamp : new Date(point.timestamp);
+
                 if(chart.type === "candlestick") {
                     if(series.removeNullsAndZeroes && (point.stats[chart.subSource].open ?? 0) === 0) return null;
                     return {
-                        x: (new Date(point.timestamp)),
+                        x,
                         y: [point.stats[chart.subSource].open, point.stats[chart.subSource].high, point.stats[chart.subSource].low, point.stats[chart.subSource].close]
                     };
                 }
-                const dataPoint = (point?.stats && point?.stats[chart.subSource]&& point?.stats[chart.subSource][series.id]) ?? 0;
+                let dataPoint = (point?.stats && point?.stats[chart.subSource]&& point?.stats[chart.subSource][series.id]);
+
+                dataPoint = dataPoint ?? (chart.relativeTime ? null : 0);
+
+                if(!dataPoint && dataPoint !== 0 && chart.relativeTime){
+                    // attempt to interpolate
+                    let startX;
+                    let startY;
+                    for(startX = idx - 1; startX >= 0; startX --) {
+                        if(allPoints[startX]?.stats && allPoints[startX]?.stats[chart.subSource] && allPoints[startX]?.stats[chart.subSource][series.id]){
+                            startY = allPoints[startX]?.stats[chart.subSource][series.id];
+                            break;
+                        }
+                    }
+
+                    let endX;
+                    let endY;
+                    for(endX = idx + 1; endX < allPoints.length; endX ++){
+                        if(allPoints[endX]?.stats && allPoints[endX]?.stats[chart.subSource] && allPoints[endX]?.stats[chart.subSource][series.id]){
+                            endY = allPoints[endX]?.stats[chart.subSource][series.id];
+                            break;
+                        }
+                    }
+
+                    if(startX !== undefined && startY !== undefined && endX !== undefined && endY !== undefined){
+                        const slope = (endY - startY) / (endX - startX);
+                        const yIntercept = startY - (slope * startX);
+                        dataPoint = (slope * idx) + yIntercept;
+                    }
+                }
+
                 if(series.removeNullsAndZeroes && dataPoint === 0) return null;
-                return [point.timestamp, dataPoint];
+                return [x, dataPoint];
             }).filter(Boolean).filter((data, idx, arr) => {
                 if(chart.type !== "candlestick") return true;
-                if(arr.findIndex((item) => (new Date(item.x)).toLocaleDateString() === (new Date(data.x)).toLocaleDateString()) === idx) return true;
+                if(arr.findIndex((item) => (
+                    chart.relativeTime ? item.x === data.x : (
+                    new Date(item.x)).toLocaleDateString() === (new Date(data.x)).toLocaleDateString())
+                ) === idx
+                ) return true;
             })
         }
     });
@@ -192,7 +234,9 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
             },
             min: chart.startYAxisAtZero ? 0 : undefined,
         },
-        xaxis: {
+        xaxis: chart.relativeTime ? {
+            show: !isSparkline
+        } : {
             type: "datetime",
             labels: {
                 /*formatter: function (value, timestamp) {
@@ -246,7 +290,7 @@ export default function ChartGraph({chart}: { chart: Chart, refreshKey: number }
             },
             x: {
                 formatter: function (val) {
-                    return (new Date(val)).toLocaleString()
+                    return chart.relativeTime ? formatDurationMinutes(val) : (new Date(val)).toLocaleString()
                 }
             }
         },

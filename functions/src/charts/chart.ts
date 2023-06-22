@@ -1,5 +1,5 @@
 
-export type ChartType = "area" | "bar" | "candlestick" | "sparkline";
+export type ChartType = "area" | "bar" | "candlestick" | "sparkline" | "scatter" | "line";
 export type TimeUnits = "" | "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 export type Format = "durationSeconds" | "durationMinutes";
 
@@ -12,6 +12,7 @@ export enum Source {
     STRAVA = "strava",
     WEATHER = "weather",
     TSCRAPER = "tscraper",
+    TSCRAPER_RELATIVE = "tscraper_relative",
 }
 
 export type Chart = {
@@ -26,6 +27,7 @@ export type Chart = {
     format?: Format;
     startYAxisAtZero?: boolean;
     delta?: boolean;
+    relativeTime?: boolean;
 };
 
 export type Series = {

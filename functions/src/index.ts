@@ -63,7 +63,7 @@ app.get("/charts", async (req, res) => {
     debug("Getting chartDefinitions", {
         route: "/chartDefinitions",
         location: "route",
-        charts
+        charts: JSON.stringify(charts).slice(0, 100)
     });
 });
 
@@ -124,6 +124,8 @@ app.get("/stats/:source", async (req, res) => {
         return;
     }
 
+    const relativeTime = req.query.relativeTime === "true";
+
     let results: any[];
     if (aggregate) {
         const latest = await latestStats(source);
@@ -145,6 +147,7 @@ app.get("/stats/:source", async (req, res) => {
                 outputObject[`${key}:${subKey}`] = {"$avg": `$stats.stats.${key}.${subKey}`};
             }
         }
+
 
         let pipelineStart: any[] = [];
 
@@ -170,7 +173,7 @@ app.get("/stats/:source", async (req, res) => {
                 sinceTime,
                 sinceUnits
             });
-        } else {
+        } else if (!relativeTime) {
             start = (await db.collection(source.toLowerCase()).find().sort({timestamp: 1}).limit(1).toArray())[0].timestamp;
         }
 
@@ -181,19 +184,22 @@ app.get("/stats/:source", async (req, res) => {
                     size: 10000
                 }
             },
-            {
-                // $bucketAuto: {
-                //     groupBy: "$timestamp",
-                //     buckets: buckets,
-                //     output: outputObject
-                // }
-                $bucket: {
+            relativeTime ? {
+                $sort: {timestamp: -1}
+            } :/* {
+                $bucketAuto: {
                     groupBy: "$timestamp",
-                    boundaries: generateBoundaries(buckets, start as Date, new Date()),
+                    buckets: buckets,
                     output: outputObject
                 }
-            }
-        ];
+            }*/ {
+                    $bucket: {
+                        groupBy: "$timestamp",
+                        boundaries: generateBoundaries(buckets, start as Date, new Date()),
+                        output: outputObject
+                    }
+                }
+        ].filter(Boolean);
 
         if (delta) {
             pipeline = [
@@ -230,7 +236,7 @@ app.get("/stats/:source", async (req, res) => {
         debug("Running aggregate pipeline", {
             route: "/stats/:source",
             location: "route",
-            pipeline
+            pipeline: pipeline // JSON.stringify(pipeline).slice(0, 1000)
         });
         const aggregateResult = await db.collection(source.toLowerCase()).aggregate(pipeline).toArray();
         debug(`aggregateResult returned Got ${aggregateResult.length} results`, {
@@ -239,7 +245,7 @@ app.get("/stats/:source", async (req, res) => {
             results: aggregateResult.length
         });
 
-        results = aggregateResult.map((result) => {
+        results = relativeTime ? aggregateResult : aggregateResult.map((result) => {
             const stats = {} as any;
             for (const [key, value] of Object.entries(result)) {
                 if (key === "_id") continue;
@@ -282,11 +288,24 @@ app.get("/stats/:source", async (req, res) => {
         });
     });
 
-    const series = results.length ? Object.entries(results[0].stats.stats).reduce((acc, [key]) => {
-        if (key === "_id") return acc;
-        acc[key] = Object.keys(results[0].stats.stats[key]);
-        return acc;
-    }, {} as { [key: string]: string[] }) : {};
+    const series = {} as {[key: string]: string[]};
+
+    const addStatToSeries = (stat: { stats: any; timestamp?: any; }) => {
+        Object.entries(stat.stats).forEach(([key]) => {
+            if (key === "_id") return;
+            series[key] = [...new Set(Object.keys(stat.stats[key]).concat(series[key] ?? []))];
+        });
+    };
+
+    if (relativeTime) {
+        for (const stat of stats) {
+            addStatToSeries(stat);
+        }
+    } else {
+        if (results[0]) {
+            addStatToSeries(results[0].stats);
+        }
+    }
 
     debug(`Returning ${stats.length} stats`, {
         route: "/stats/:source",
