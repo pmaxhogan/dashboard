@@ -7,7 +7,7 @@ export const fetcherMultple = async ({urls}) => {
 }
 
 export const apiBase = process.env.NODE_ENV === "development" ? "http://localhost:5001/peaceful-access-dashboard/us-central1/api" : "https://us-central1-peaceful-access-dashboard.cloudfunctions.net/api";
-export const apiToken = process.env.NEXT_PUBLIC_API_KEY;
+export const apiToken = "05c5969e4bb023de9970f9bded75b11005f42c44a070c2c1e6808c757357eaed";
 export function fetchApi(path: string, options?: any) {
     return fetch(`${apiBase}${path}`, {
         ...options,
